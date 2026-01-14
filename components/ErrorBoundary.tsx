@@ -19,9 +19,12 @@ export class ErrorBoundary extends Component<Props, State> {
     return { hasError: true, error };
   }
 
-  public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-  }
+        public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+          console.error('[CANCRI] ErrorBoundary caught an error:', error, errorInfo);
+          console.error('[CANCRI] Error message:', error.message);
+          console.error('[CANCRI] Error stack:', error.stack);
+          console.error('[CANCRI] Component stack:', errorInfo.componentStack);
+        }
 
   public render() {
     if (this.state.hasError) {

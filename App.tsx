@@ -41,15 +41,15 @@ const App: React.FC = () => {
   useEffect(() => {
     try {
       console.log('[App] Initializing services...');
-      const memory = crystalService.loadMemory();
-      if (memory.messages.length > 0) setMessages(memory.messages);
-      if (memory.logs.length > 0) setLogs(memory.logs);
-      
-      // Load persisted keys from vault
-      const savedMistral = localStorage.getItem('cancri_mistral_vault');
-      
-      setCognitiveConfig(prev => ({ 
-        ...prev, 
+    const memory = crystalService.loadMemory();
+    if (memory.messages.length > 0) setMessages(memory.messages);
+    if (memory.logs.length > 0) setLogs(memory.logs);
+    
+    // Load persisted keys from vault
+    const savedMistral = localStorage.getItem('cancri_mistral_vault');
+    
+    setCognitiveConfig(prev => ({ 
+      ...prev, 
         mistralKey: savedMistral || ''
       }));
       
@@ -193,7 +193,7 @@ const App: React.FC = () => {
   };
 
   console.log('[App] Rendering component, status:', status);
-  
+
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-black text-white selection:bg-purple-500/30">
       <Scene status={status} />

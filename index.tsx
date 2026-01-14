@@ -97,7 +97,22 @@ try {
   console.log('[CANCRI] Environment:', {
     VITE_API_BASE_URL: import.meta.env?.VITE_API_BASE_URL,
     MODE: import.meta.env?.MODE,
-    BASE_URL: import.meta.env?.BASE_URL
+    BASE_URL: import.meta.env?.BASE_URL,
+    PROD: import.meta.env?.PROD,
+    DEV: import.meta.env?.DEV
+  });
+  
+  // 检查关键资源是否加载
+  const scripts = document.querySelectorAll('script[type="module"]');
+  console.log('[CANCRI] Module scripts found:', scripts.length);
+  scripts.forEach((script, i) => {
+    console.log(`[CANCRI] Script ${i}:`, script.src || script.textContent?.substring(0, 50));
+  });
+  
+  const styles = document.querySelectorAll('link[rel="stylesheet"]');
+  console.log('[CANCRI] Stylesheets found:', styles.length);
+  styles.forEach((style, i) => {
+    console.log(`[CANCRI] Stylesheet ${i}:`, style.href);
   });
   
   const root = ReactDOM.createRoot(rootElement);

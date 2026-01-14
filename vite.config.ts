@@ -5,14 +5,16 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
-    // Vercel 使用根路径，GitHub Pages 使用子目录
-    // 检查多个可能的 Vercel 环境变量
-    const isVercel = process.env.VERCEL || process.env.VERCEL_ENV || process.env.VERCEL_URL || process.env.CI === 'true' && !process.env.GITHUB_REPOSITORY;
-    // 如果明确设置了 VERCEL_BASE，使用它；否则根据环境判断
-    const base = process.env.VERCEL_BASE || (isVercel ? '/' : '/cancri/');
+    // Vercel 总是使用根路径，GitHub Pages 使用子目录
+    // 检查多个可能的 Vercel 环境变量，或者通过 CI 环境判断
+    const isVercel = process.env.VERCEL || process.env.VERCEL_ENV || process.env.VERCEL_URL || 
+                     (process.env.CI && !process.env.GITHUB_REPOSITORY);
+    // 如果明确设置了 BASE_PATH，使用它；否则根据环境判断
+    const base = process.env.BASE_PATH || (isVercel ? '/' : '/cancri/');
     
-    if (mode === 'development' || process.env.DEBUG) {
-      console.log('[Vite Config] Base path:', base, 'Mode:', mode, 'Vercel:', isVercel);
+    // 开发环境输出 base path 用于调试
+    if (mode === 'development') {
+      console.log('[Vite Config] Base path:', base, 'Vercel:', isVercel, 'CI:', process.env.CI);
     }
     
     return {
