@@ -12,7 +12,10 @@ export default defineConfig(({ mode }) => {
         ? '/cancri/'  // GitHub Actions 环境
         : '/';
     
-    console.log('Vite base path:', base);
+    // 只在非生产环境输出日志
+    if (mode !== 'production') {
+      console.log('Vite base path:', base);
+    }
     
     return {
       base,
