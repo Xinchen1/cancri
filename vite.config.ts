@@ -25,19 +25,20 @@ export default defineConfig(({ mode }) => {
         minify: 'terser',
         terserOptions: {
           compress: {
-            drop_console: mode === 'production',
+            drop_console: false, // 保留 console 用于调试
             drop_debugger: mode === 'production',
-            pure_funcs: mode === 'production' ? ['console.log', 'console.info', 'console.debug', 'console.trace'] : [],
-            passes: mode === 'production' ? 3 : 1,
+            pure_funcs: [], // 不删除任何函数
+            passes: 1, // 减少压缩次数，避免过度混淆
           },
           mangle: {
             properties: {
               regex: /^_/
             },
-            toplevel: mode === 'production',
+            toplevel: false, // 不混淆顶层变量，避免 undefined 问题
+            reserved: ['d', 'delta', 'data'], // 保留可能被访问的属性名
           },
           format: {
-            comments: mode !== 'production',
+            comments: true, // 保留注释
           },
         },
         rollupOptions: {
