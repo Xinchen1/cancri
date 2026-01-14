@@ -4,8 +4,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
-    // 强制使用 /cancri/ 作为 base path（GitHub Pages 子目录部署）
-    const base = '/cancri/';
+    // Vercel 使用根路径，GitHub Pages 使用子目录
+    const base = process.env.VERCEL ? '/' : '/cancri/';
     
     return {
       base,
