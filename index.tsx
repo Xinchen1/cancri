@@ -80,9 +80,15 @@ rootElement.appendChild(loadingDiv);
 
 try {
   console.log('[CANCRI] Initializing React app...');
+  console.log('[CANCRI] Base URL:', window.location.origin + window.location.pathname);
   console.log('[CANCRI] Root element:', rootElement);
   console.log('[CANCRI] ReactDOM:', ReactDOM);
   console.log('[CANCRI] App component:', App);
+  console.log('[CANCRI] Environment:', {
+    VITE_API_BASE_URL: import.meta.env?.VITE_API_BASE_URL,
+    MODE: import.meta.env?.MODE,
+    BASE_URL: import.meta.env?.BASE_URL
+  });
   
   const root = ReactDOM.createRoot(rootElement);
   console.log('[CANCRI] Root created:', root);

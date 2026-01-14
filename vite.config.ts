@@ -12,6 +12,8 @@ export default defineConfig(({ mode }) => {
         ? '/cancri/'  // GitHub Actions 环境
         : '/';
     
+    console.log('Vite base path:', base);
+    
     return {
       base,
       server: {
