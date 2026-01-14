@@ -6,15 +6,12 @@ export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     // GitHub Pages 部署到子目录，base path 应该是仓库名
     // 对于 https://xinchen1.github.io/cancri/ 这样的地址，base 应该是 '/cancri/'
-    const base = process.env.GITHUB_REPOSITORY 
-      ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/`
-      : process.env.CI 
-        ? '/cancri/'  // GitHub Actions 环境
-        : '/';
-    
-    // 只在非生产环境输出日志
-    if (mode !== 'production') {
-      console.log('Vite base path:', base);
+    let base = '/';
+    if (process.env.GITHUB_REPOSITORY) {
+      const repoName = process.env.GITHUB_REPOSITORY.split('/')[1];
+      base = `/${repoName}/`;
+    } else if (process.env.CI) {
+      base = '/cancri/';
     }
     
     return {

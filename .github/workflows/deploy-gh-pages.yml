@@ -39,7 +39,14 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           CI: true
           NODE_ENV: production
-        run: npm run build
+        run: |
+          echo "Building with base path: /cancri/"
+          npm run build 2>&1 | tee build.log
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "Build failed. Showing last 50 lines:"
+            tail -50 build.log
+            exit 1
+          fi
         continue-on-error: false
 
       - name: Setup Pages
