@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => {
               regex: /^_/
             },
             toplevel: false, // 不混淆顶层变量，避免 undefined 问题
-            reserved: ['d', 'delta', 'data', 'safeDelta'], // 保留可能被访问的属性名
+            reserved: ['d', 'delta', 'data', 'safeDelta', 'choices', 'content', 'json'], // 保留可能被访问的属性名
           },
           format: {
             comments: true, // 保留注释

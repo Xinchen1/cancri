@@ -210,15 +210,21 @@ class CrystalService {
             if (line.startsWith('data: ')) {
               try {
                 const json: MistralStreamChunk = JSON.parse(line.slice(6));
-                const content = json.choices?.[0]?.delta?.content || "";
-                if (content) {
-                  fullText += content;
-                  onChunk(content);
-                  lastChunkTime = Date.now(); // Update on actual content
-                }
-                // Check if stream is finished
-                if (json.choices?.[0]?.finish_reason) {
-                  return fullText;
+                // Safety check: ensure choices exists and is an array
+                if (json && json.choices && Array.isArray(json.choices) && json.choices.length > 0) {
+                  const choice = json.choices[0];
+                  if (choice && choice.delta && typeof choice.delta === 'object' && choice.delta.content) {
+                    const content = choice.delta.content;
+                    if (typeof content === 'string' && content.length > 0) {
+                      fullText += content;
+                      onChunk(content);
+                      lastChunkTime = Date.now(); // Update on actual content
+                    }
+                  }
+                  // Check if stream is finished
+                  if (choice && choice.finish_reason) {
+                    return fullText;
+                  }
                 }
               } catch (e) {
                 // Skip invalid JSON
