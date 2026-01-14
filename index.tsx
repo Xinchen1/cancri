@@ -79,12 +79,13 @@ loadingDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; heig
 rootElement.appendChild(loadingDiv);
 
 // Render loading progress component immediately
+let loadingRoot: ReturnType<typeof ReactDOM.createRoot> | null = null;
 try {
-  const loadingRoot = ReactDOM.createRoot(loadingDiv);
+  loadingRoot = ReactDOM.createRoot(loadingDiv);
   loadingRoot.render(<LoadingProgress />);
 } catch (e) {
-  console.error('Failed to render loading:', e);
-  loadingDiv.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100vh; color: white; font-family: Inter, sans-serif;">Loading...</div>';
+  console.error('[CANCRI] Failed to render loading:', e);
+  loadingDiv.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100vh; color: white; font-family: Inter, sans-serif; background: #050505;">Loading...</div>';
 }
 
 try {
@@ -128,8 +129,10 @@ try {
         loader.style.transition = 'opacity 0.5s ease-out';
         setTimeout(() => {
           try {
-            const loadingRoot = ReactDOM.createRoot(loader);
-            loadingRoot.unmount();
+            if (loadingRoot) {
+              loadingRoot.unmount();
+              loadingRoot = null;
+            }
           } catch (e) {
             // Ignore unmount errors
           }

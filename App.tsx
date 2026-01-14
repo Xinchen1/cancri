@@ -40,7 +40,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     try {
-      console.log('App: Initializing services...');
+      console.log('[App] Initializing services...');
       const memory = crystalService.loadMemory();
       if (memory.messages.length > 0) setMessages(memory.messages);
       if (memory.logs.length > 0) setLogs(memory.logs);
@@ -57,10 +57,15 @@ const App: React.FC = () => {
       if (savedMistral) {
         vectorDbService.updateMistralApiKey(savedMistral);
       }
-      console.log('App: Services initialized successfully');
+      console.log('[App] Services initialized successfully');
     } catch (error) {
-      console.error('App: Failed to initialize services:', error);
-      addLog('SYSTEM', `初始化失败: ${error instanceof Error ? error.message : String(error)}`, 'error');
+      console.error('[App] Failed to initialize services:', error);
+      // 不阻止应用加载，只记录错误
+      try {
+        addLog('SYSTEM', `初始化警告: ${error instanceof Error ? error.message : String(error)}`, 'warning');
+      } catch (e) {
+        // 如果 addLog 也失败，至少确保应用能显示
+      }
     }
   }, []);
 
@@ -187,7 +192,7 @@ const App: React.FC = () => {
     }
   };
 
-  console.log('App: Rendering component, status:', status);
+  console.log('[App] Rendering component, status:', status);
   
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-black text-white selection:bg-purple-500/30">
