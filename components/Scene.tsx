@@ -96,7 +96,6 @@ export const Scene: React.FC<SceneProps> = ({ status }) => {
           {/* Allow user to inspect the crystal, but limit zoom */}
           <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
         </Canvas>
-      }
       </Suspense>
       {errorMessage && (
         <div className="absolute bottom-4 left-4 z-10">
