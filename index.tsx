@@ -75,11 +75,17 @@ if (!rootElement) {
 // Add loading indicator - will be replaced by React component
 const loadingDiv = document.createElement('div');
 loadingDiv.id = 'loading';
+loadingDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: #050505;';
 rootElement.appendChild(loadingDiv);
 
-// Render loading progress component
-const loadingRoot = ReactDOM.createRoot(loadingDiv);
-loadingRoot.render(<LoadingProgress />);
+// Render loading progress component immediately
+try {
+  const loadingRoot = ReactDOM.createRoot(loadingDiv);
+  loadingRoot.render(<LoadingProgress />);
+} catch (e) {
+  console.error('Failed to render loading:', e);
+  loadingDiv.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100vh; color: white; font-family: Inter, sans-serif;">Loading...</div>';
+}
 
 try {
   console.log('[CANCRI] Initializing React app...');
@@ -121,12 +127,17 @@ try {
         loader.style.opacity = '0';
         loader.style.transition = 'opacity 0.5s ease-out';
         setTimeout(() => {
-          loadingRoot.unmount();
+          try {
+            const loadingRoot = ReactDOM.createRoot(loader);
+            loadingRoot.unmount();
+          } catch (e) {
+            // Ignore unmount errors
+          }
           loader.remove();
         }, 500);
-      }, 300);
+      }, 500);
     }
-  }, 1500);
+  }, 2000);
 } catch (error) {
   console.error('Failed to render app:', error);
   rootElement.innerHTML = `

@@ -5,15 +5,18 @@ export const LoadingProgress: React.FC = () => {
   const [dots, setDots] = useState('');
 
   useEffect(() => {
+    // 快速加载到 90%
+    setProgress(90);
+    
     // 模拟加载进度
     const interval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 90) {
-          return prev; // 保持在 90%，等待实际加载完成
+        if (prev >= 95) {
+          return prev; // 保持在 95%，等待实际加载完成
         }
-        return prev + Math.random() * 15;
+        return prev + Math.random() * 3;
       });
-    }, 200);
+    }, 300);
 
     // 动画点
     const dotInterval = setInterval(() => {
@@ -27,14 +30,6 @@ export const LoadingProgress: React.FC = () => {
       clearInterval(interval);
       clearInterval(dotInterval);
     };
-  }, []);
-
-  // 当组件挂载时，快速加载到 90%
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setProgress(90);
-    }, 100);
-    return () => clearTimeout(timer);
   }, []);
 
   return (

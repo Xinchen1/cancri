@@ -4,15 +4,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
-    // GitHub Pages 部署到子目录，base path 应该是仓库名
-    // 对于 https://xinchen1.github.io/cancri/ 这样的地址，base 应该是 '/cancri/'
-    let base = '/';
-    if (process.env.GITHUB_REPOSITORY) {
-      const repoName = process.env.GITHUB_REPOSITORY.split('/')[1];
-      base = `/${repoName}/`;
-    } else if (process.env.CI) {
-      base = '/cancri/';
-    }
+    // 强制使用 /cancri/ 作为 base path（GitHub Pages 子目录部署）
+    const base = '/cancri/';
     
     return {
       base,
