@@ -63,7 +63,7 @@ export const Scene: React.FC<SceneProps> = ({ status }) => {
 
   return (
     <div className="absolute inset-0 z-0 bg-black">
-      <Suspense fallback={<SceneFallback />}>{
+      <Suspense fallback={<SceneFallback />}>
         <Canvas 
           camera={{ position: [0, 0, 6], fov: 45 }}
           gl={{ antialias: true, alpha: false }}
