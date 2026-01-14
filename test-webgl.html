@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebGL Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .error {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WebGL Support Test</h1>
+        <p>This test checks if your browser supports WebGL, which is required for the 3D scene in CANCRI.</p>
+        
+        <div id="webgl-result" class="result">
+            Testing WebGL support...
+        </div>
+        
+        <div id="webgl-info" style="display: none; margin-top: 20px;">
+            <h3>WebGL Information:</h3>
+            <pre id="webgl-details"></pre>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <h3>Troubleshooting:</h3>
+            <ul>
+                <li>If WebGL is not supported, try updating your browser</li>
+                <li>Make sure hardware acceleration is enabled in your browser settings</li>
+                <li>Check if your graphics drivers are up to date</li>
+                <li>Try a different browser (Chrome, Firefox, Safari, Edge)</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // WebGL detection function
+        function checkWebGLSupport() {
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                
+                if (!gl) {
+                    document.getElementById('webgl-result').className = 'result error';
+                    document.getElementById('webgl-result').textContent = 'WebGL is NOT supported in your browser';
+                    return false;
+                }
+                
+                // Get WebGL information
+                const resultElement = document.getElementById('webgl-result');
+                resultElement.className = 'result success';
+                resultElement.textContent = 'WebGL is supported!';
+                
+                // Show detailed info
+                const infoElement = document.getElementById('webgl-info');
+                const detailsElement = document.getElementById('webgl-details');
+                infoElement.style.display = 'block';
+                
+                let info = '';
+                info += 'Vendor: ' + gl.getParameter(gl.VENDOR) + '\n';
+                info += 'Renderer: ' + gl.getParameter(gl.RENDERER) + '\n';
+                info += 'Version: ' + gl.getParameter(gl.VERSION) + '\n';
+                info += 'Shader Language Version: ' + gl.getParameter(gl.SHADING_LANGUAGE_VERSION) + '\n';
+                
+                // Check extensions
+                const extensions = gl.getSupportedExtensions() || [];
+                info += '\nSupported Extensions (' + extensions.length + '):\n';
+                info += extensions.slice(0, 10).join(', ') + (extensions.length > 10 ? '...' : '');
+                
+                detailsElement.textContent = info;
+                
+                return true;
+                
+            } catch (error) {
+                document.getElementById('webgl-result').className = 'result error';
+                document.getElementById('webgl-result').textContent = 'Error detecting WebGL: ' + error.message;
+                return false;
+            }
+        }
+        
+        // Run the test
+        checkWebGLSupport();
+    </script>
+</body>
+</html>

@@ -6,7 +6,20 @@
  * All prompts, algorithms, and sensitive logic are server-side only.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://cancri-api.your-domain.workers.dev';
+// Safely get API base URL with fallback
+const getApiBaseUrl = (): string => {
+  try {
+    const envUrl = import.meta.env?.VITE_API_BASE_URL;
+    if (envUrl && typeof envUrl === 'string' && envUrl.trim().length > 0) {
+      return envUrl.trim();
+    }
+  } catch (e) {
+    console.warn('Failed to read VITE_API_BASE_URL from env:', e);
+  }
+  return 'https://cancri-api.xinhalle356.workers.dev';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 // Generate request signature for additional security
 async function generateSignature(data: Record<string, any>, secret: string): Promise<string> {
@@ -101,6 +114,9 @@ export class ApiService {
     }
 
     const data = await response.json();
+    if (!data || !data.data || !Array.isArray(data.data) || data.data.length === 0) {
+      throw new Error('Invalid embedding response format');
+    }
     return data.data[0].embedding;
   }
 

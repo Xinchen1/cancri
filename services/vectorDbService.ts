@@ -125,10 +125,10 @@ class VectorDbService {
         }
 
         const data = await response.json();
-        if (data.data && Array.isArray(data.data)) {
+        if (data && data.data && Array.isArray(data.data)) {
           const results: number[][] = [];
           for (const item of data.data) {
-            if (item.embedding && Array.isArray(item.embedding)) {
+            if (item && item.embedding && Array.isArray(item.embedding)) {
               results.push(item.embedding);
             } else {
               console.warn("Empty embedding returned for text chunk");
@@ -303,7 +303,7 @@ class VectorDbService {
         }
 
         const data = await response.json();
-        if (data.data && data.data[0] && data.data[0].embedding) {
+        if (data && data.data && Array.isArray(data.data) && data.data.length > 0 && data.data[0] && data.data[0].embedding) {
           // Success - update current key index for future use
           if (!this.userProvidedKey) {
             this.currentKeyIndex = i;

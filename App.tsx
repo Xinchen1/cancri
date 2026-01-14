@@ -39,21 +39,28 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
-    const memory = crystalService.loadMemory();
-    if (memory.messages.length > 0) setMessages(memory.messages);
-    if (memory.logs.length > 0) setLogs(memory.logs);
-    
-    // Load persisted keys from vault
-    const savedMistral = localStorage.getItem('cancri_mistral_vault');
-    
-    setCognitiveConfig(prev => ({ 
-      ...prev, 
-      mistralKey: savedMistral || ''
-    }));
-    
-    // Update vector database service with loaded key
-    if (savedMistral) {
-      vectorDbService.updateMistralApiKey(savedMistral);
+    try {
+      console.log('App: Initializing services...');
+      const memory = crystalService.loadMemory();
+      if (memory.messages.length > 0) setMessages(memory.messages);
+      if (memory.logs.length > 0) setLogs(memory.logs);
+      
+      // Load persisted keys from vault
+      const savedMistral = localStorage.getItem('cancri_mistral_vault');
+      
+      setCognitiveConfig(prev => ({ 
+        ...prev, 
+        mistralKey: savedMistral || ''
+      }));
+      
+      // Update vector database service with loaded key
+      if (savedMistral) {
+        vectorDbService.updateMistralApiKey(savedMistral);
+      }
+      console.log('App: Services initialized successfully');
+    } catch (error) {
+      console.error('App: Failed to initialize services:', error);
+      addLog('SYSTEM', `初始化失败: ${error instanceof Error ? error.message : String(error)}`, 'error');
     }
   }, []);
 
@@ -180,6 +187,8 @@ const App: React.FC = () => {
     }
   };
 
+  console.log('App: Rendering component, status:', status);
+  
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-black text-white selection:bg-purple-500/30">
       <Scene status={status} />

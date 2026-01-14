@@ -4,7 +4,14 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
+    // 如果设置了 GITHUB_REPOSITORY，使用仓库名作为 base path
+    // 否则默认使用根路径（适用于 username.github.io 类型的仓库）
+    const base = process.env.GITHUB_REPOSITORY 
+      ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/`
+      : '/';
+    
     return {
+      base,
       server: {
         port: 5000,
         host: '0.0.0.0',
@@ -45,9 +52,8 @@ export default defineConfig(({ mode }) => {
         chunkSizeWarningLimit: 1000,
       },
       define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'import.meta.env.VITE_API_BASE_URL': JSON.stringify(env.VITE_API_BASE_URL || '')
+        'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY || ''),
+        'import.meta.env.VITE_API_BASE_URL': JSON.stringify(env.VITE_API_BASE_URL || 'https://cancri-api.xinhalle356.workers.dev')
       },
       resolve: {
         alias: {

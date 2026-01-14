@@ -29,25 +29,32 @@
     </script>
     <style>
       body { margin: 0; background-color: #050505; color: white; overflow: hidden; }
-      #root { width: 100vw; height: 100vh; }
+      #root { width: 100vw; height: 100vh; position: relative; }
       /* Custom scrollbar for logs */
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      /* Loading indicator */
+      #loading-indicator {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-family: Inter, sans-serif;
+        z-index: 9999;
+      }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@^19.2.3",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@react-three/fiber": "https://esm.sh/@react-three/fiber@^9.4.2",
-    "three": "https://esm.sh/three@^0.182.0",
-    "lucide-react": "https://esm.sh/lucide-react@^0.561.0",
-    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@react-three/drei": "https://esm.sh/@react-three/drei@^10.7.7"
-  }
-}
-</script>
+    <div id="loading-indicator">加载中...</div>
+    <script>
+      // Remove loading indicator when app loads
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          const loader = document.getElementById('loading-indicator');
+          if (loader) loader.remove();
+        }, 1000);
+      });
+    </script>
+  
 <link rel="stylesheet" href="/index.css">
 </head>
   <body>
