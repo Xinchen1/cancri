@@ -141,40 +141,47 @@ try {
   setTimeout(() => {
     const loader = document.getElementById('loading');
     if (loader) {
-      // Complete progress to 100%
-      const progressElement = loader.querySelector('[style*="width"]') as HTMLElement;
-      if (progressElement) {
-        progressElement.style.width = '100%';
+      if (loadingRoot) {
+        try {
+          loadingRoot.unmount();
+        } catch (e) {
+          console.warn('[CANCRI] Failed to unmount loading:', e);
+        }
       }
-      
-      // Fade out after a short delay
-      setTimeout(() => {
-        loader.style.opacity = '0';
-        loader.style.transition = 'opacity 0.5s ease-out';
-        setTimeout(() => {
-          try {
-            if (loadingRoot) {
-              loadingRoot.unmount();
-              loadingRoot = null;
-            }
-          } catch (e) {
-            // Ignore unmount errors
-          }
-          loader.remove();
-        }, 500);
-      }, 500);
+      try {
+        loader.remove();
+      } catch (e) {
+        console.warn('[CANCRI] Failed to remove loader:', e);
+      }
     }
-  }, 2000);
-} catch (error) {
-  console.error('Failed to render app:', error);
-  rootElement.innerHTML = `
-    <div style="color: white; padding: 20px; background: #050505; width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: Inter, sans-serif;">
-      <h1 style="color: #f43f5e; margin-bottom: 20px;">应用加载失败</h1>
-      <p style="margin-bottom: 20px;">${error instanceof Error ? error.message : '未知错误'}</p>
-      ${error instanceof Error && error.stack ? `<pre style="background: #1a1a1a; padding: 15px; border-radius: 5px; overflow: auto; font-size: 12px; max-width: 800px; width: 100%; margin-bottom: 20px;">${error.stack}</pre>` : ''}
-      <button onclick="window.location.reload()" style="padding: 10px 20px; background: #7e22ce; color: white; border: none; border-radius: 5px; cursor: pointer;">
-        刷新页面
-      </button>
-    </div>
+  }, 500);
+  
+  // 额外的安全检查：如果 3 秒后页面仍然是黑色，显示诊断信息
+  setTimeout(() => {
+    const rootEl = document.getElementById('root');
+    if (rootEl && rootEl.children.length === 0) {
+      console.error('[CANCRI] Root element is empty after 3 seconds!');
+      const diagnostic = document.createElement('div');
+      diagnostic.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #f43f5e; color: white; padding: 15px; border-radius: 5px; z-index: 99999; max-width: 400px; font-family: monospace; font-size: 12px;';
+      diagnostic.innerHTML = `
+        <strong>诊断信息</strong><br>
+        Root children: ${rootEl.children.length}<br>
+        URL: ${window.location.href}<br>
+        检查控制台获取更多信息
+      `;
+      document.body.appendChild(diagnostic);
+    }
+  }, 3000);
+} catch (e) {
+  console.error('[CANCRI] Failed to initialize app:', e);
+  const errorDiv = document.createElement('div');
+  errorDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #050505; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; font-family: Inter, sans-serif; z-index: 99999;';
+  errorDiv.innerHTML = `
+    <h1 style="color: #f43f5e; margin-bottom: 20px;">应用初始化失败</h1>
+    <p style="margin-bottom: 10px;">${e instanceof Error ? e.message : String(e)}</p>
+    ${e instanceof Error && e.stack ? `<pre style="background: #1a1a1a; padding: 10px; border-radius: 5px; overflow: auto; max-width: 800px; font-size: 11px; margin: 10px 0;">${e.stack}</pre>` : ''}
+    <p style="color: #a855f7; font-size: 12px; margin-top: 10px;">URL: ${window.location.href}</p>
+    <button onclick="window.location.reload()" style="margin-top: 20px; padding: 10px 20px; background: #7e22ce; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 14px;">刷新页面</button>
   `;
+  document.body.appendChild(errorDiv);
 }
