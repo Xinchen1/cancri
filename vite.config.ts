@@ -1,6 +1,7 @@
 import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
@@ -13,7 +14,12 @@ export default defineConfig(({ mode }) => {
         port: 5000,
         host: '0.0.0.0',
       },
-      plugins: [react()],
+      plugins: [
+        react(),
+        tailwindcss({
+          minify: mode === 'production', // 生产环境启用压缩
+        }),
+      ],
       build: {
         minify: 'terser',
         terserOptions: {
