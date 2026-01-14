@@ -68,7 +68,16 @@ import App from './App';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
-  document.body.innerHTML = '<div style="color: white; padding: 20px; background: #050505; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center;">无法找到根元素。请检查 HTML 文件。</div>';
+  // 创建错误显示
+  const errorDiv = document.createElement('div');
+  errorDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #050505; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; font-family: Inter, sans-serif; z-index: 99999;';
+  errorDiv.innerHTML = `
+    <h1 style="color: #f43f5e; margin-bottom: 20px;">无法找到根元素</h1>
+    <p style="margin-bottom: 10px;">请检查 HTML 文件是否包含 &lt;div id="root"&gt;&lt;/div&gt;</p>
+    <p style="color: #a855f7; font-size: 12px;">当前 URL: ${window.location.href}</p>
+    <p style="color: #a855f7; font-size: 12px;">Pathname: ${window.location.pathname}</p>
+  `;
+  document.body.appendChild(errorDiv);
   throw new Error("Could not find root element to mount to");
 }
 

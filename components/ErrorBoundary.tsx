@@ -28,6 +28,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public render() {
     if (this.state.hasError) {
+      console.error('[CANCRI] ErrorBoundary rendering error UI');
       return (
         <div style={{
           width: '100vw',
@@ -39,10 +40,15 @@ export class ErrorBoundary extends Component<Props, State> {
           backgroundColor: '#050505',
           color: '#fff',
           padding: '20px',
-          fontFamily: 'Inter, sans-serif'
+          fontFamily: 'Inter, sans-serif',
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          zIndex: 99999
         }}>
           <h1 style={{ fontSize: '24px', marginBottom: '20px', color: '#f43f5e' }}>应用加载错误</h1>
           <p style={{ marginBottom: '10px', color: '#fff' }}>应用遇到了一个错误，请刷新页面重试。</p>
+          <p style={{ marginBottom: '10px', color: '#a855f7', fontSize: '12px' }}>URL: {window.location.href}</p>
           {this.state.error && (
             <details style={{ marginTop: '20px', maxWidth: '800px', width: '100%' }}>
               <summary style={{ cursor: 'pointer', color: '#a855f7', marginBottom: '10px' }}>错误详情</summary>
@@ -52,7 +58,8 @@ export class ErrorBoundary extends Component<Props, State> {
                 borderRadius: '5px',
                 overflow: 'auto',
                 fontSize: '12px',
-                color: '#f43f5e'
+                color: '#f43f5e',
+                maxHeight: '400px'
               }}>
                 {this.state.error.toString()}
                 {this.state.error.stack && `\n\n${this.state.error.stack}`}
