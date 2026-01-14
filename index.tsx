@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { LoadingProgress } from './components/LoadingProgress';
 
 // Add global error handlers BEFORE any imports that might fail
 window.addEventListener('error', (event) => {
@@ -71,12 +72,14 @@ if (!rootElement) {
   throw new Error("Could not find root element to mount to");
 }
 
-// Add loading indicator
+// Add loading indicator - will be replaced by React component
 const loadingDiv = document.createElement('div');
 loadingDiv.id = 'loading';
-loadingDiv.style.cssText = 'width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; background: #050505; color: #fff; font-family: Inter, sans-serif; position: fixed; top: 0; left: 0; z-index: 9999;';
-loadingDiv.textContent = '加载中...';
 rootElement.appendChild(loadingDiv);
+
+// Render loading progress component
+const loadingRoot = ReactDOM.createRoot(loadingDiv);
+loadingRoot.render(<LoadingProgress />);
 
 try {
   console.log('[CANCRI] Initializing React app...');
@@ -107,11 +110,23 @@ try {
   setTimeout(() => {
     const loader = document.getElementById('loading');
     if (loader) {
-      loader.style.opacity = '0';
-      loader.style.transition = 'opacity 0.3s';
-      setTimeout(() => loader.remove(), 300);
+      // Complete progress to 100%
+      const progressElement = loader.querySelector('[style*="width"]') as HTMLElement;
+      if (progressElement) {
+        progressElement.style.width = '100%';
+      }
+      
+      // Fade out after a short delay
+      setTimeout(() => {
+        loader.style.opacity = '0';
+        loader.style.transition = 'opacity 0.5s ease-out';
+        setTimeout(() => {
+          loadingRoot.unmount();
+          loader.remove();
+        }, 500);
+      }, 300);
     }
-  }, 1000);
+  }, 1500);
 } catch (error) {
   console.error('Failed to render app:', error);
   rootElement.innerHTML = `
