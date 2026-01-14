@@ -1,0 +1,7 @@
+{
+  "name": "Cancri",
+  "description": "CANCRI (55 Cancri e) - A hyper-advanced AI interface inspired by the diamond planet. Features recursive self-evolution and a holographic crystal core.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
