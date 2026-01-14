@@ -25,9 +25,9 @@ export default defineConfig(({ mode }) => {
         minify: 'terser',
         terserOptions: {
           compress: {
-            drop_console: false, // 保留 console 用于调试
+            drop_console: false, // 保留 console 用于调试 GitHub Pages
             drop_debugger: mode === 'production',
-            pure_funcs: [], // 不删除任何函数
+            pure_funcs: [], // 不删除任何函数，避免破坏代码
             passes: 1, // 减少压缩次数，避免过度混淆
           },
           mangle: {
@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
               regex: /^_/
             },
             toplevel: false, // 不混淆顶层变量，避免 undefined 问题
-            reserved: ['d', 'delta', 'data'], // 保留可能被访问的属性名
+            reserved: ['d', 'delta', 'data', 'safeDelta'], // 保留可能被访问的属性名
           },
           format: {
             comments: true, // 保留注释
