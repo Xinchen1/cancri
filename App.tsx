@@ -131,16 +131,36 @@ const App: React.FC = () => {
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
     
+    // 检查是否需要深度思考，如果未开启则提示用户
+    const shouldUseDeepThinking = enableDeepThinking || cognitiveConfig.enableDebate;
+    
+    if (!shouldUseDeepThinking) {
+      // 快速检测是否可能是复杂问题
+      const complexKeywords = ['分析', '思考', '策略', '规划', '方案', '建议', '如何', '为什么', '解释', '理解', '解决', '优化', '改进', '评估', '比较', '探讨', '研究', '设计', '制定'];
+      const isComplex = complexKeywords.some(keyword => text.includes(keyword)) || text.length > 50;
+      
+      if (isComplex) {
+        const userChoice = confirm('检测到这可能是一个复杂问题，是否开启深度思考模式以获得更深入的分析？\n\n点击"确定"开启深度思考，点击"取消"使用快速模式。');
+        if (userChoice) {
+          setEnableDeepThinking(true);
+          setCognitiveConfig(prev => ({ ...prev, enableDebate: true }));
+        }
+      }
+    }
+    
     const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text, timestamp: Date.now() };
     setMessages(prev => [...prev, userMsg]);
 
     const assistantMsgId = (Date.now() + 1).toString();
     setMessages(prev => [...prev, { id: assistantMsgId, role: 'assistant', content: '', timestamp: Date.now() }]);
 
+    // 使用更新后的配置
+    const currentConfig = { ...cognitiveConfig, enableDebate: enableDeepThinking || cognitiveConfig.enableDebate };
+
     await crystalService.processUserMessageStream(
         text, 
         messages, 
-        cognitiveConfig,
+        currentConfig,
         async (fullText, meta) => {
             setMessages(prev => prev.map(m => m.id === assistantMsgId ? { ...m, content: fullText, metadata: meta } : m));
             
@@ -290,7 +310,19 @@ const App: React.FC = () => {
 
         <div className="pointer-events-auto"><Conversation messages={messages} /></div>
         <LogsOverlay logs={logs} />
-        <div className="pointer-events-auto"><ChatInput onSend={handleSendMessage} onFileUpload={handleFileUpload} onVoiceToggle={handleVoiceToggle} status={status} /></div>
+        <div className="pointer-events-auto">
+          <ChatInput 
+            onSend={handleSendMessage} 
+            onFileUpload={handleFileUpload} 
+            onVoiceToggle={handleVoiceToggle} 
+            status={status}
+            enableDeepThinking={enableDeepThinking}
+            onToggleDeepThinking={() => {
+              setEnableDeepThinking(!enableDeepThinking);
+              setCognitiveConfig(prev => ({ ...prev, enableDebate: !enableDeepThinking }));
+            }}
+          />
+        </div>
 
         <div className="pointer-events-auto">
           <ManualModal isOpen={isManualOpen} onClose={() => setIsManualOpen(false)} />
