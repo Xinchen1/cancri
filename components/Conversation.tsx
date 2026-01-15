@@ -133,61 +133,44 @@ const DebateBox = ({ debate, isGenerating }: { debate: Message['metadata']['deba
   }[debate.stage || 'completed'];
 
   return (
-    <div className={`w-full bg-gradient-to-r from-purple-950/40 via-purple-900/30 to-purple-950/40 border-2 rounded-xl overflow-hidden mb-3 animate-in fade-in transition-all ${
+    <div className={`w-full bg-black/40 backdrop-blur-sm border border-purple-500/20 rounded-lg overflow-hidden mb-3 animate-in fade-in transition-all ${
       isGenerating 
-        ? 'border-purple-400/60 shadow-[0_0_25px_rgba(168,85,247,0.5)] ring-2 ring-purple-500/30' 
-        : 'border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
+        ? 'border-purple-400/40 shadow-[0_0_20px_rgba(168,85,247,0.2)]' 
+        : 'border-purple-500/10'
     }`}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-4 py-3 flex items-center justify-between hover:bg-purple-500/10 transition-colors relative overflow-hidden"
+        className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-white/5 transition-colors relative"
       >
-        {/* 背景进度条 */}
-        {isGenerating && (
-          <div 
-            className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-purple-400/30 to-purple-500/20 transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          />
-        )}
-        
-        <div className="flex items-center gap-3 text-[11px] font-mono text-purple-300 uppercase tracking-widest relative z-10">
+        <div className="flex items-center gap-2.5 text-xs font-mono text-purple-300/90 uppercase tracking-wider">
           {isGenerating ? (
-            <div className="flex items-center gap-2">
-              <Loader2 size={14} className="animate-spin text-purple-400" />
-              <div className="flex gap-1">
-                {[...Array(3)].map((_, i) => (
-                  <div 
-                    key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"
-                    style={{ animationDelay: `${i * 0.2}s` }}
-                  />
-                ))}
-              </div>
-            </div>
+            <Loader2 size={12} className="animate-spin text-purple-400" />
           ) : (
-            <Scale size={14} className="text-purple-400" />
+            <Scale size={12} className="text-purple-400/70" />
           )}
-          <span className={`font-bold ${isGenerating ? 'text-purple-300' : 'text-purple-400'}`}>
+          <span className="font-medium">
             {stageLabel}
           </span>
           {isGenerating && (
-            <span className="text-[9px] text-purple-400/70 font-normal">
+            <span className="text-[10px] text-purple-400/60 font-normal ml-1">
               {Math.round(progress)}%
             </span>
           )}
         </div>
-        {isOpen ? <ChevronUp size={14} className="text-purple-400/60 relative z-10" /> : <ChevronDown size={14} className="text-purple-400/60 relative z-10" />}
+        {isOpen ? <ChevronUp size={12} className="text-white/30" /> : <ChevronDown size={12} className="text-white/30" />}
       </button>
       
       {/* 进度条 */}
       {isGenerating && (
-        <div className="h-1 bg-purple-950/50 relative overflow-hidden">
+        <div className="h-0.5 bg-white/5 relative overflow-hidden">
           <div 
-            className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-400 via-purple-300 to-purple-400 transition-all duration-500 shadow-[0_0_10px_rgba(168,85,247,0.6)]"
+            className="absolute inset-y-0 left-0 bg-purple-400 transition-all duration-500"
             style={{ width: `${progress}%` }}
-          >
-            <div className="absolute inset-0 bg-white/30 animate-pulse" />
-          </div>
+          />
+          <div 
+            className="absolute inset-y-0 left-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transition-all duration-500"
+            style={{ width: `${progress}%`, transform: `translateX(${progress}%)` }}
+          />
         </div>
       )}
 
