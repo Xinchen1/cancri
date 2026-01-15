@@ -37,13 +37,19 @@ export default defineConfig(({ mode }) => {
             drop_debugger: mode === 'production',
             pure_funcs: [], // 不删除任何函数，避免破坏代码
             passes: 1, // 减少压缩次数，避免过度混淆
+            unsafe: false, // 禁用不安全的优化，避免破坏 Three.js
+            unsafe_comps: false, // 禁用不安全的比较优化
+            unsafe_math: false, // 禁用不安全的数学优化
+            unsafe_methods: false, // 禁用不安全的方法优化
           },
           mangle: {
             properties: {
               regex: /^_/
             },
             toplevel: false, // 不混淆顶层变量，避免 undefined 问题
-            reserved: ['d', 'delta', 'data', 'safeDelta', 'choices', 'content', 'json'], // 保留可能被访问的属性名
+            reserved: ['d', 'delta', 'data', 'safeDelta', 'choices', 'content', 'json', 'state', 'clock', 'gl', 'scene', 'camera'], // 保留可能被访问的属性名
+            keep_classnames: true, // 保留类名，避免 Three.js 相关问题
+            keep_fnames: true, // 保留函数名，便于调试
           },
           format: {
             comments: true, // 保留注释

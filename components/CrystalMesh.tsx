@@ -39,10 +39,22 @@ export const CrystalMesh: React.FC<CrystalProps> = ({ status }) => {
 
   useFrame((state, delta) => {
     try {
-      // Safety check for delta parameter
-      const safeDelta = (delta && typeof delta === 'number' && !isNaN(delta)) ? delta : 0.016;
+      // Comprehensive safety checks
+      if (!state || typeof state !== 'object') {
+        console.error('[CrystalMesh] Invalid state parameter:', state);
+        return;
+      }
+      if (!state.clock || typeof state.clock.getElapsedTime !== 'function') {
+        console.error('[CrystalMesh] Invalid state.clock:', state.clock);
+        return;
+      }
+      if (!outerRef.current || !innerRef.current) {
+        return;
+      }
       
-      if (!outerRef.current || !innerRef.current) return;
+      // Safety check for delta parameter - ensure it's always a valid number
+      const safeDelta = (delta != null && typeof delta === 'number' && !isNaN(delta) && isFinite(delta) && delta > 0) ? delta : 0.016;
+      
       const t = state.clock.getElapsedTime();
 
       outerRef.current.rotation.x += safeDelta * 0.15 * config.speed;
@@ -53,28 +65,43 @@ export const CrystalMesh: React.FC<CrystalProps> = ({ status }) => {
       outerRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), safeDelta * 5);
 
       const outerMat = outerRef.current.material as THREE.MeshPhysicalMaterial;
-      if (!outerMat) {
-        console.error('Outer material not found');
+      if (!outerMat || typeof outerMat !== 'object') {
+        console.error('[CrystalMesh] Outer material not found or invalid');
+        return;
+      }
+      
+      // Safety checks for material properties
+      if (typeof outerMat.color?.lerp !== 'function' || typeof outerMat.emissive?.lerp !== 'function') {
+        console.error('[CrystalMesh] Invalid material properties:', outerMat);
         return;
       }
       
       const targetColor = new THREE.Color(config.color);
       outerMat.color.lerp(targetColor, safeDelta * 2);
       outerMat.emissive.lerp(targetColor, safeDelta * 2);
-      outerMat.emissiveIntensity = THREE.MathUtils.lerp(outerMat.emissiveIntensity, config.emissive + Math.sin(t * 5) * 0.2, safeDelta * 2);
+      if (typeof outerMat.emissiveIntensity === 'number') {
+        outerMat.emissiveIntensity = THREE.MathUtils.lerp(outerMat.emissiveIntensity, config.emissive + Math.sin(t * 5) * 0.2, safeDelta * 2);
+      }
       // 控制透明度，输出文字时变淡
-      outerMat.opacity = THREE.MathUtils.lerp(outerMat.opacity, config.opacity, safeDelta * 3);
+      if (typeof outerMat.opacity === 'number') {
+        outerMat.opacity = THREE.MathUtils.lerp(outerMat.opacity, config.opacity, safeDelta * 3);
+      }
 
+      if (!innerRef.current) return;
       innerRef.current.rotation.x -= safeDelta * 0.1;
       const innerMat = innerRef.current.material as THREE.MeshStandardMaterial;
-      if (!innerMat) {
-        console.error('Inner material not found');
+      if (!innerMat || typeof innerMat !== 'object') {
+        console.error('[CrystalMesh] Inner material not found or invalid');
         return;
       }
       
-      innerMat.emissiveIntensity = 2 + Math.sin(t * 10) * 0.5;
+      if (typeof innerMat.emissiveIntensity === 'number') {
+        innerMat.emissiveIntensity = 2 + Math.sin(t * 10) * 0.5;
+      }
       // 内部水晶也变淡
-      innerMat.opacity = THREE.MathUtils.lerp(innerMat.opacity, config.opacity, safeDelta * 3);
+      if (typeof innerMat.opacity === 'number') {
+        innerMat.opacity = THREE.MathUtils.lerp(innerMat.opacity, config.opacity, safeDelta * 3);
+      }
     } catch (e) {
       console.error('Frame update error:', e);
       setError(`Frame error: ${e instanceof Error ? e.message : 'Unknown error'}`);

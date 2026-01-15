@@ -75,8 +75,10 @@ export const Scene: React.FC<SceneProps> = ({ status }) => {
             }
           }}
           onError={(error) => {
-            console.error('Canvas error:', error);
+            console.error('[Scene] Canvas error:', error);
             setErrorMessage(`Canvas error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            // 尝试继续渲染，即使有错误
+            setWebglSupported(true); // 允许继续尝试
           }}
         >
           <color attach="background" args={['#050505']} />
