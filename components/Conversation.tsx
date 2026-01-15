@@ -60,8 +60,16 @@ export const Conversation: React.FC<ConversationProps> = ({ messages }) => {
               
               {msg.metadata?.modelUsed && (
                 <div className="text-[10px] text-white/20 font-mono pl-1 flex items-center gap-2">
-                   <span>❖ CANCRI</span> 
-                   {msg.metadata.provider === 'Mistral' && <span className="text-purple-500/60 uppercase tracking-tighter text-[8px] border border-purple-500/20 px-1 rounded">CANCRI</span>}
+                   <span>❖ {msg.metadata.isDeepThinking ? 'CANCRI-LARGE' : 'CANCRI-FAST'}</span> 
+                   {msg.metadata.provider === 'Mistral' && (
+                     <span className={`uppercase tracking-tighter text-[8px] border px-1 rounded ${
+                       msg.metadata.isDeepThinking 
+                         ? 'text-purple-400 border-purple-400/50 bg-purple-500/10 shadow-[0_0_8px_rgba(168,85,247,0.3)]' 
+                         : 'text-purple-500/60 border-purple-500/20'
+                     }`}>
+                       {msg.metadata.isDeepThinking ? 'CANCRI-LARGE' : 'CANCRI-FAST'}
+                     </span>
+                   )}
                 </div>
               )}
             </div>
@@ -82,6 +90,7 @@ export const Conversation: React.FC<ConversationProps> = ({ messages }) => {
 
 const DebateBox = ({ debate, isGenerating }: { debate: Message['metadata']['debate'], isGenerating: boolean }) => {
   const [isOpen, setIsOpen] = useState(true);
+  const [progress, setProgress] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -89,6 +98,32 @@ const DebateBox = ({ debate, isGenerating }: { debate: Message['metadata']['deba
         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [debate?.critique, debate?.draft, isGenerating]);
+
+  // 进度动画：根据阶段显示不同进度
+  useEffect(() => {
+    if (!isGenerating) {
+      setProgress(100);
+      return;
+    }
+    
+    let currentProgress = 0;
+    const progressMap = {
+      drafting: 33,
+      critiquing: 66,
+      refining: 90,
+      completed: 100
+    };
+    const targetProgress = progressMap[debate?.stage || 'drafting'] || 0;
+    
+    const interval = setInterval(() => {
+      if (currentProgress < targetProgress) {
+        currentProgress = Math.min(currentProgress + 2, targetProgress);
+        setProgress(currentProgress);
+      }
+    }, 100);
+    
+    return () => clearInterval(interval);
+  }, [debate?.stage, isGenerating]);
 
   const stageLabel = {
     drafting: "Phase 1: Deep Thinking...",
@@ -98,17 +133,63 @@ const DebateBox = ({ debate, isGenerating }: { debate: Message['metadata']['deba
   }[debate.stage || 'completed'];
 
   return (
-    <div className={`w-full bg-white/5 border border-white/10 rounded-xl overflow-hidden mb-2 animate-in fade-in transition-all ${isGenerating ? 'border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.1)]' : ''}`}>
+    <div className={`w-full bg-gradient-to-r from-purple-950/40 via-purple-900/30 to-purple-950/40 border-2 rounded-xl overflow-hidden mb-3 animate-in fade-in transition-all ${
+      isGenerating 
+        ? 'border-purple-400/60 shadow-[0_0_25px_rgba(168,85,247,0.5)] ring-2 ring-purple-500/30' 
+        : 'border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
+    }`}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 flex items-center justify-between hover:bg-white/5 transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between hover:bg-purple-500/10 transition-colors relative overflow-hidden"
       >
-        <div className="flex items-center gap-2 text-[10px] font-mono text-amber-400 uppercase tracking-widest">
-          {isGenerating ? <Loader2 size={12} className="animate-spin" /> : <Scale size={12} />}
-          <span>{stageLabel}</span>
+        {/* 背景进度条 */}
+        {isGenerating && (
+          <div 
+            className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-purple-400/30 to-purple-500/20 transition-all duration-500"
+            style={{ width: `${progress}%` }}
+          />
+        )}
+        
+        <div className="flex items-center gap-3 text-[11px] font-mono text-purple-300 uppercase tracking-widest relative z-10">
+          {isGenerating ? (
+            <div className="flex items-center gap-2">
+              <Loader2 size={14} className="animate-spin text-purple-400" />
+              <div className="flex gap-1">
+                {[...Array(3)].map((_, i) => (
+                  <div 
+                    key={i}
+                    className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"
+                    style={{ animationDelay: `${i * 0.2}s` }}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <Scale size={14} className="text-purple-400" />
+          )}
+          <span className={`font-bold ${isGenerating ? 'text-purple-300' : 'text-purple-400'}`}>
+            {stageLabel}
+          </span>
+          {isGenerating && (
+            <span className="text-[9px] text-purple-400/70 font-normal">
+              {Math.round(progress)}%
+            </span>
+          )}
         </div>
-        {isOpen ? <ChevronUp size={12} className="text-white/40" /> : <ChevronDown size={12} className="text-white/40" />}
+        {isOpen ? <ChevronUp size={14} className="text-purple-400/60 relative z-10" /> : <ChevronDown size={14} className="text-purple-400/60 relative z-10" />}
       </button>
+      
+      {/* 进度条 */}
+      {isGenerating && (
+        <div className="h-1 bg-purple-950/50 relative overflow-hidden">
+          <div 
+            className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-400 via-purple-300 to-purple-400 transition-all duration-500 shadow-[0_0_10px_rgba(168,85,247,0.6)]"
+            style={{ width: `${progress}%` }}
+          >
+            <div className="absolute inset-0 bg-white/30 animate-pulse" />
+          </div>
+        </div>
+      )}
 
       {isOpen && (
         <div ref={scrollRef} className="p-3 space-y-4 border-t border-white/10 bg-black/40 max-h-48 overflow-y-auto no-scrollbar">

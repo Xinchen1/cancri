@@ -377,6 +377,7 @@ Think through this systematically:
                     draftText += chunk;
                     // Show progress indicator during drafting
                     onChunk("", { 
+                      isDeepThinking: true,
                       debate: { stage: 'drafting', draft: draftText } 
                     } as any);
                   },
@@ -427,6 +428,7 @@ Provide a concise critique focusing on improvements needed.`;
                     critiqueText += chunk;
                     // Show progress indicator during critiquing
                     onChunk("", { 
+                      isDeepThinking: true,
                       debate: { stage: 'critiquing', draft: draftText, critique: critiqueText } 
                     } as any);
                   },
@@ -477,6 +479,7 @@ Generate a final response that is accurate, complete, and well-structured.`;
                     onChunk(fullText, { 
                       modelUsed: baseModel, 
                       provider: 'Mistral',
+                      isDeepThinking: true,
                       debate: { stage: 'completed', draft: draftText, critique: critiqueText } 
                     });
                   },
@@ -517,7 +520,8 @@ Generate a final response that is accurate, complete, and well-structured.`;
                     fullText += chunk;
                     onChunk(fullText, { 
                       modelUsed: baseModel, 
-                      provider: 'Mistral' 
+                      provider: 'Mistral',
+                      isDeepThinking: false
                     });
                   },
                   120000 // 2 minute timeout

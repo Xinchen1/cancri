@@ -52,6 +52,7 @@ export interface Message {
     provider?: 'Mistral';
     fileProcessed?: string;
     isVoice?: boolean;
+    isDeepThinking?: boolean;
   };
 }
 
