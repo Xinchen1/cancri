@@ -15,6 +15,7 @@ import { vectorDbService } from './services/vectorDbService';
 import { liveApiService } from './services/liveApiService';
 import { AgentStatus, Message, LogEntry, AudioPreset, CognitiveConfig } from './types';
 import { Info, Settings, Trash2, Download } from 'lucide-react';
+import { MobileMenu } from './components/MobileMenu';
 
 const App: React.FC = () => {
   const [status, setStatus] = useState<AgentStatus>(AgentStatus.IDLE);
@@ -234,6 +235,15 @@ const App: React.FC = () => {
              <button onClick={() => setIsSettingsOpen(true)} className="w-10 h-10 bg-black/60 border border-white/20 rounded-full flex items-center justify-center hover:bg-white/10 text-white/60" title="Settings"><Settings size={14}/></button>
              <button onClick={() => setIsManualOpen(true)} className="px-4 h-10 bg-black/60 border border-white/20 rounded-full flex items-center gap-2 hover:bg-white/10 text-white/60" title="Manual"><Info size={14} /><span className="text-[10px] uppercase tracking-widest">Manual</span></button>
         </div>
+
+        {/* Mobile: Collapsible menu */}
+        <MobileMenu
+          onExport={handleExport}
+          onClear={() => { crystalService.clearMemory(); setMessages([]); setLogs([]); }}
+          onSettings={() => setIsSettingsOpen(true)}
+          onManual={() => setIsManualOpen(true)}
+          canExport={messages.length > 0}
+        />
 
 
         <div className="pointer-events-auto"><Conversation messages={messages} /></div>
