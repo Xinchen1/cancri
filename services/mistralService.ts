@@ -381,8 +381,8 @@ class CrystalService {
         // Deep Thinking Mechanism with Mistral - Default enabled
         if (config.enableDebate && useDeepThinking && baseModel.includes('large')) {
             // Phase 1: Deep Thinking - Generate initial draft with multiple thinking iterations
-            setStatus(AgentStatus.THINKING);
-            addLog("NEURAL", "Phase 1: Deep Thinking - Generating initial perspective...", "info");
+            // Status already set to THINKING above
+            addLog("THINKING", "Phase 1: 深度思考中 - 生成初始观点...", "info");
             
             let draftText = "";
             const thinkingPrompt = `Think deeply about this question. Consider multiple perspectives, analyze the archive context carefully, and reason step by step. Generate a comprehensive draft response.
@@ -530,13 +530,12 @@ Generate a final response that is accurate, complete, and well-structured.`;
 
         } else {
             // Simple mode: Direct response without debate
-            // Set status to THINKING first, then SPEAKING when outputting text
-            setStatus(AgentStatus.THINKING);
-            addLog("THINKING", "Processing query...", "info");
+            // Status already set to THINKING above
+            addLog("THINKING", "思考中...", "info");
             
             // Set status to SPEAKING when outputting text (for crystal dimming effect)
             setStatus(AgentStatus.SPEAKING);
-            addLog("NEURAL", "Generating response...", "info");
+            addLog("NEURAL", "生成回答中...", "info");
             
             let fullText = "";
             await this.tryWithFallback(
