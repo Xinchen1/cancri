@@ -63,6 +63,12 @@ if (!webglSupported) {
   console.warn('WebGL not supported, falling back to 2D mode');
 }
 
+// 添加早期诊断
+console.log('[CANCRI] Pre-import diagnostics');
+console.log('[CANCRI] Window location:', window.location.href);
+console.log('[CANCRI] Document ready state:', document.readyState);
+console.log('[CANCRI] Root element exists:', !!document.getElementById('root'));
+
 // Import App component
 import App from './App';
 
@@ -84,8 +90,10 @@ if (!rootElement) {
 // Add loading indicator - will be replaced by React component
 const loadingDiv = document.createElement('div');
 loadingDiv.id = 'loading';
-loadingDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: #050505;';
+loadingDiv.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 99999; background: #050505; display: flex; align-items: center; justify-content: center;';
+loadingDiv.innerHTML = '<div style="color: white; font-family: Inter, sans-serif; text-align: center;"><h1 style="font-size: 24px; margin-bottom: 10px;">CANCRI</h1><p style="font-size: 14px; opacity: 0.7;">Loading...</p></div>';
 rootElement.appendChild(loadingDiv);
+console.log('[CANCRI] Loading indicator added');
 
 // Render loading progress component immediately
 let loadingRoot: ReturnType<typeof ReactDOM.createRoot> | null = null;

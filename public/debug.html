@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Debug Page</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #050505;
+      color: white;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    .section {
+      margin: 20px 0;
+      padding: 15px;
+      background: #1a1a1a;
+      border-radius: 5px;
+      border-left: 3px solid #a855f7;
+    }
+    .success { color: #22d3ee; }
+    .error { color: #f43f5e; }
+    .warning { color: #fbbf24; }
+    pre {
+      background: #0a0a0a;
+      padding: 10px;
+      border-radius: 5px;
+      overflow: auto;
+      font-size: 12px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #7e22ce;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 CANCRI 调试页面</h1>
+  
+  <div class="section">
+    <h2>1. 页面信息</h2>
+    <p><strong>URL:</strong> <span id="url"></span></p>
+    <p><strong>Pathname:</strong> <span id="pathname"></span></p>
+    <p><strong>Origin:</strong> <span id="origin"></span></p>
+  </div>
+  
+  <div class="section">
+    <h2>2. DOM 检查</h2>
+    <p><strong>Root Element:</strong> <span id="root-check"></span></p>
+    <p><strong>Root Children:</strong> <span id="root-children"></span></p>
+    <p><strong>Body Children:</strong> <span id="body-children"></span></p>
+  </div>
+  
+  <div class="section">
+    <h2>3. 资源检查</h2>
+    <p><strong>Scripts:</strong> <span id="scripts-count"></span></p>
+    <div id="scripts-list"></div>
+    <p><strong>Stylesheets:</strong> <span id="styles-count"></span></p>
+    <div id="styles-list"></div>
+  </div>
+  
+  <div class="section">
+    <h2>4. 环境变量</h2>
+    <div id="env-info"></div>
+  </div>
+  
+  <div class="section">
+    <h2>5. 错误日志</h2>
+    <div id="errors-list"></div>
+  </div>
+  
+  <div class="section">
+    <h2>6. 测试加载主应用</h2>
+    <button onclick="loadApp()">加载主应用</button>
+    <button onclick="location.reload()">刷新页面</button>
+    <div id="app-status"></div>
+  </div>
+  
+  <script>
+    const errors = [];
+    
+    window.addEventListener('error', (e) => {
+      errors.push({
+        type: 'error',
+        message: e.message,
+        filename: e.filename,
+        lineno: e.lineno,
+        colno: e.colno,
+        error: e.error?.stack
+      });
+      updateErrors();
+    });
+    
+    window.addEventListener('unhandledrejection', (e) => {
+      errors.push({
+        type: 'promise',
+        reason: String(e.reason),
+        stack: e.reason?.stack
+      });
+      updateErrors();
+    });
+    
+    function updateErrors() {
+      const el = document.getElementById('errors-list');
+      if (errors.length === 0) {
+        el.innerHTML = '<p class="success">✅ 无错误</p>';
+      } else {
+        el.innerHTML = `<p class="error">❌ ${errors.length} 个错误</p><pre>${JSON.stringify(errors, null, 2)}</pre>`;
+      }
+    }
+    
+    // 页面信息
+    document.getElementById('url').textContent = window.location.href;
+    document.getElementById('pathname').textContent = window.location.pathname;
+    document.getElementById('origin').textContent = window.location.origin;
+    
+    // DOM 检查
+    const root = document.getElementById('root');
+    if (root) {
+      document.getElementById('root-check').innerHTML = '<span class="success">✅ 找到</span>';
+      document.getElementById('root-children').textContent = root.children.length;
+    } else {
+      document.getElementById('root-check').innerHTML = '<span class="error">❌ 未找到</span>';
+    }
+    document.getElementById('body-children').textContent = document.body.children.length;
+    
+    // 资源检查
+    const scripts = document.querySelectorAll('script[type="module"]');
+    document.getElementById('scripts-count').textContent = scripts.length;
+    const scriptsList = document.createElement('div');
+    scripts.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.style.marginTop = '5px';
+      div.innerHTML = `${i + 1}. <code>${s.src || 'inline'}</code>`;
+      scriptsList.appendChild(div);
+    });
+    document.getElementById('scripts-list').appendChild(scriptsList);
+    
+    const styles = document.querySelectorAll('link[rel="stylesheet"]');
+    document.getElementById('styles-count').textContent = styles.length;
+    const stylesList = document.createElement('div');
+    styles.forEach((s, i) => {
+      const div = document.createElement('div');
+      div.style.marginTop = '5px';
+      div.innerHTML = `${i + 1}. <code>${s.href}</code>`;
+      stylesList.appendChild(div);
+    });
+    document.getElementById('styles-list').appendChild(stylesList);
+    
+    // 环境变量
+    try {
+      const envInfo = document.createElement('pre');
+      envInfo.textContent = JSON.stringify({
+        VITE_API_BASE_URL: import.meta.env?.VITE_API_BASE_URL,
+        MODE: import.meta.env?.MODE,
+        PROD: import.meta.env?.PROD,
+        DEV: import.meta.env?.DEV,
+        BASE_URL: import.meta.env?.BASE_URL
+      }, null, 2);
+      document.getElementById('env-info').appendChild(envInfo);
+    } catch (e) {
+      document.getElementById('env-info').innerHTML = `<p class="error">无法读取环境变量: ${e.message}</p>`;
+    }
+    
+    updateErrors();
+    
+    // 测试加载主应用
+    async function loadApp() {
+      const statusEl = document.getElementById('app-status');
+      statusEl.innerHTML = '<p class="warning">⏳ 正在加载...</p>';
+      
+      try {
+        // 尝试动态导入主应用
+        const scripts = document.querySelectorAll('script[type="module"]');
+        if (scripts.length > 0) {
+          const mainScript = Array.from(scripts).find(s => s.src && s.src.includes('assets'));
+          if (mainScript) {
+            statusEl.innerHTML = `<p>找到主脚本: ${mainScript.src}</p>`;
+            // 检查脚本是否已加载
+            const testScript = document.createElement('script');
+            testScript.type = 'module';
+            testScript.src = mainScript.src;
+            testScript.onload = () => {
+              statusEl.innerHTML = '<p class="success">✅ 脚本加载成功</p>';
+            };
+            testScript.onerror = (e) => {
+              statusEl.innerHTML = `<p class="error">❌ 脚本加载失败: ${e}</p>`;
+            };
+            document.head.appendChild(testScript);
+          } else {
+            statusEl.innerHTML = '<p class="error">❌ 未找到主脚本</p>';
+          }
+        } else {
+          statusEl.innerHTML = '<p class="error">❌ 未找到任何模块脚本</p>';
+        }
+      } catch (e) {
+        statusEl.innerHTML = `<p class="error">❌ 加载失败: ${e.message}</p>`;
+      }
+    }
+    
+    // 自动检查资源加载状态
+    setTimeout(() => {
+      const scripts = document.querySelectorAll('script[type="module"]');
+      scripts.forEach(script => {
+        if (script.src) {
+          fetch(script.src, { method: 'HEAD' })
+            .then(res => {
+              if (!res.ok) {
+                console.error(`Script failed to load: ${script.src} - ${res.status}`);
+              }
+            })
+            .catch(e => {
+              console.error(`Script fetch error: ${script.src}`, e);
+            });
+        }
+      });
+    }, 1000);
+  </script>
+</body>
+</html>
+
