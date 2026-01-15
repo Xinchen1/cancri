@@ -15,28 +15,57 @@ class AdminService {
   private readonly ENCRYPTION_KEY = 'cancri_encryption_key_v1';
 
   // Simple encryption (XOR cipher for basic obfuscation)
+  // Support Unicode characters by encoding to UTF-8 first
   private encrypt(text: string): string {
-    const key = this.ENCRYPTION_KEY;
-    let result = '';
-    for (let i = 0; i < text.length; i++) {
-      const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-      result += String.fromCharCode(charCode);
+    try {
+      const key = this.ENCRYPTION_KEY;
+      // Convert string to UTF-8 bytes
+      const utf8Bytes = new TextEncoder().encode(text);
+      const keyBytes = new TextEncoder().encode(key);
+      
+      // XOR encryption
+      const encrypted = new Uint8Array(utf8Bytes.length);
+      for (let i = 0; i < utf8Bytes.length; i++) {
+        encrypted[i] = utf8Bytes[i] ^ keyBytes[i % keyBytes.length];
+      }
+      
+      // Convert to Base64 (safe for Unicode)
+      const binaryString = String.fromCharCode(...encrypted);
+      return btoa(binaryString);
+    } catch (e) {
+      console.error('Encryption error:', e);
+      // Fallback: simple encoding for error cases
+      return btoa(unescape(encodeURIComponent(text)));
     }
-    return btoa(result); // Base64 encode
   }
 
   private decrypt(encryptedText: string): string {
     try {
       const key = this.ENCRYPTION_KEY;
-      const text = atob(encryptedText); // Base64 decode
-      let result = '';
-      for (let i = 0; i < text.length; i++) {
-        const charCode = text.charCodeAt(i) ^ key.charCodeAt(i % key.length);
-        result += String.fromCharCode(charCode);
+      // Decode Base64
+      const binaryString = atob(encryptedText);
+      const encrypted = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        encrypted[i] = binaryString.charCodeAt(i);
       }
-      return result;
+      
+      // XOR decryption
+      const keyBytes = new TextEncoder().encode(key);
+      const decrypted = new Uint8Array(encrypted.length);
+      for (let i = 0; i < encrypted.length; i++) {
+        decrypted[i] = encrypted[i] ^ keyBytes[i % keyBytes.length];
+      }
+      
+      // Convert back to UTF-8 string
+      return new TextDecoder().decode(decrypted);
     } catch (e) {
-      return '[Decryption Error]';
+      console.error('Decryption error:', e);
+      // Fallback: simple decoding for error cases
+      try {
+        return decodeURIComponent(escape(atob(encryptedText)));
+      } catch (e2) {
+        return '[Decryption Error]';
+      }
     }
   }
 
