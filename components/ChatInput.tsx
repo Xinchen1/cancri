@@ -77,17 +77,18 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
   }, [isRecording]);
 
   return (
-    <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-3rem)] sm:w-full max-w-2xl z-20">
+    <div className="fixed bottom-4 sm:bottom-8 md:bottom-10 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] sm:w-[calc(100%-3rem)] md:w-full max-w-2xl z-20">
       <div className={`relative group transition-all duration-500 ${isBusy && !isIndexing ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}`}>
         <div className={`absolute -inset-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full opacity-30 group-hover:opacity-70 blur transition duration-500 ${(isIndexing || isRecording) ? 'animate-pulse opacity-100' : ''}`}></div>
-        <div className="relative flex items-center bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-3 sm:px-4 py-3 sm:py-4 shadow-2xl w-full">
+        <div className="relative flex items-center bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 shadow-2xl w-full">
           
           <button 
             disabled={isBusy || isRecording}
             onClick={() => fileInputRef.current?.click()}
-            className={`mr-1.5 sm:mr-2 sm:mr-3 p-1.5 sm:p-2 rounded-full transition-all hover:bg-white/10 shrink-0 ${isBusy || isRecording ? 'opacity-20' : 'text-white/50 hover:text-white'}`}
+            className={`mr-1 sm:mr-2 md:mr-3 p-1.5 sm:p-2 rounded-full transition-all hover:bg-white/10 shrink-0 ${isBusy || isRecording ? 'opacity-20' : 'text-white/50 hover:text-white'}`}
+            title="Upload file"
           >
-            {isIndexing ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-cyan-400" /> : <Paperclip size={18} className="sm:w-5 sm:h-5" />}
+            {isIndexing ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-cyan-400" /> : <Paperclip size={16} className="sm:w-5 sm:h-5" />}
           </button>
           
           <input type="file" ref={fileInputRef} onChange={(e) => e.target.files?.[0] && onFileUpload(e.target.files[0])} className="hidden" accept=".txt,.md,.json" />
@@ -105,7 +106,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
             </div>
           ) : (
             <>
-              <Sparkles className={`w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 transition-colors duration-300 shrink-0 ${isBusy ? 'text-purple-400 animate-pulse' : 'text-white/50'}`} />
+              <Sparkles className={`w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 md:mr-3 transition-colors duration-300 shrink-0 ${isBusy ? 'text-purple-400 animate-pulse' : 'text-white/50'}`} />
               <input
                 type="text"
                 value={value}
@@ -113,7 +114,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
                 onKeyDown={handleKeyDown}
                 placeholder={isIndexing ? "Indexing..." : isBusy ? "Cancri is processing..." : "Initialize command..."}
                 disabled={isBusy || isRecording}
-                className="bg-transparent border-none outline-none text-white placeholder-white/30 flex-1 min-w-0 font-light tracking-wide text-sm sm:text-base"
+                className="bg-transparent border-none outline-none text-white placeholder-white/30 flex-1 min-w-0 font-light tracking-wide text-xs sm:text-sm md:text-base px-1"
               />
             </>
           )}
@@ -125,26 +126,27 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
             onTouchStart={handleVoicePressStart}
             onTouchEnd={handleVoicePressEnd}
             disabled={isBusy || isIndexing}
-            className={`ml-1.5 sm:ml-2 p-1.5 sm:p-2 rounded-full transition-all duration-300 shrink-0 ${
+            className={`ml-1 sm:ml-1.5 md:ml-2 p-1.5 sm:p-2 rounded-full transition-all duration-300 shrink-0 ${
               isRecording 
                 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/50 animate-pulse' 
                 : 'text-white/50 hover:text-white hover:bg-white/10'
             }`}
             title="Hold to speak"
           >
-            {isRecording ? <MicOff size={18} className="sm:w-5 sm:h-5" /> : <Mic size={18} className="sm:w-5 sm:h-5" />}
+            {isRecording ? <MicOff size={16} className="sm:w-5 sm:h-5" /> : <Mic size={16} className="sm:w-5 sm:h-5" />}
           </button>
 
           <button 
             onClick={handleSend}
             disabled={(!value.trim() && !voiceText.trim()) || isBusy || isRecording}
-            className={`ml-1.5 sm:ml-2 p-1.5 sm:p-2 rounded-full transition-all duration-300 shrink-0 ${
+            className={`ml-1 sm:ml-1.5 md:ml-2 p-1.5 sm:p-2 rounded-full transition-all duration-300 shrink-0 ${
               ((value.trim() || voiceText.trim()) && !isBusy && !isRecording) 
                 ? 'bg-white text-black hover:bg-cyan-200 shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
                 : 'bg-white/5 text-white/20 cursor-not-allowed'
             }`}
+            title="Send message"
           >
-            <Send size={16} className="sm:w-[18px] sm:h-[18px]" />
+            <Send size={14} className="sm:w-[18px] sm:h-[18px]" />
           </button>
         </div>
       </div>
