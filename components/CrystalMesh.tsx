@@ -39,30 +39,56 @@ export const CrystalMesh: React.FC<CrystalProps> = ({ status }) => {
 
   useFrame((state, delta) => {
     try {
-      // Comprehensive safety checks
-      if (!state || typeof state !== 'object') {
+      // Comprehensive safety checks - prevent any undefined access
+      if (!state || typeof state !== 'object' || state === null) {
         console.error('[CrystalMesh] Invalid state parameter:', state);
         return;
       }
-      if (!state.clock || typeof state.clock.getElapsedTime !== 'function') {
+      
+      // Check state.clock exists and has required methods
+      if (!state.clock || typeof state.clock !== 'object' || typeof state.clock.getElapsedTime !== 'function') {
         console.error('[CrystalMesh] Invalid state.clock:', state.clock);
         return;
       }
+      
+      // Check refs exist
       if (!outerRef.current || !innerRef.current) {
         return;
       }
       
       // Safety check for delta parameter - ensure it's always a valid number
-      const safeDelta = (delta != null && typeof delta === 'number' && !isNaN(delta) && isFinite(delta) && delta > 0) ? delta : 0.016;
+      // Use != null to check for both null and undefined
+      let safeDelta = 0.016; // Default to 60fps
+      if (delta != null && typeof delta === 'number') {
+        if (!isNaN(delta) && isFinite(delta) && delta > 0 && delta < 1) {
+          safeDelta = delta;
+        }
+      }
       
-      const t = state.clock.getElapsedTime();
+      // Safely get elapsed time
+      let t = 0;
+      try {
+        t = state.clock.getElapsedTime();
+        if (typeof t !== 'number' || isNaN(t) || !isFinite(t)) {
+          t = 0;
+        }
+      } catch (e) {
+        console.error('[CrystalMesh] Error getting elapsed time:', e);
+        t = 0;
+      }
 
-      outerRef.current.rotation.x += safeDelta * 0.15 * config.speed;
-      outerRef.current.rotation.y += safeDelta * 0.2 * config.speed;
+      // Safely access rotation properties
+      if (outerRef.current.rotation && typeof outerRef.current.rotation.x === 'number') {
+        outerRef.current.rotation.x += safeDelta * 0.15 * config.speed;
+        outerRef.current.rotation.y += safeDelta * 0.2 * config.speed;
+      }
       
-      const organicPulse = Math.sin(t * config.speed) * (status === AgentStatus.VOICE_ACTIVE ? 0.15 : 0.05);
-      const targetScale = 1.4 + organicPulse + (config.scale - 1.0);
-      outerRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), safeDelta * 5);
+      // Safely access scale
+      if (outerRef.current.scale && typeof outerRef.current.scale.lerp === 'function') {
+        const organicPulse = Math.sin(t * config.speed) * (status === AgentStatus.VOICE_ACTIVE ? 0.15 : 0.05);
+        const targetScale = 1.4 + organicPulse + (config.scale - 1.0);
+        outerRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), safeDelta * 5);
+      }
 
       const outerMat = outerRef.current.material as THREE.MeshPhysicalMaterial;
       if (!outerMat || typeof outerMat !== 'object') {
@@ -88,7 +114,10 @@ export const CrystalMesh: React.FC<CrystalProps> = ({ status }) => {
       }
 
       if (!innerRef.current) return;
-      innerRef.current.rotation.x -= safeDelta * 0.1;
+      // Safely access inner rotation
+      if (innerRef.current.rotation && typeof innerRef.current.rotation.x === 'number') {
+        innerRef.current.rotation.x -= safeDelta * 0.1;
+      }
       const innerMat = innerRef.current.material as THREE.MeshStandardMaterial;
       if (!innerMat || typeof innerMat !== 'object') {
         console.error('[CrystalMesh] Inner material not found or invalid');
