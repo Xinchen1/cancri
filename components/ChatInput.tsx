@@ -1,8 +1,9 @@
 
 import React, { useState, KeyboardEvent, useRef, useEffect } from 'react';
-import { Send, Sparkles, Paperclip, Loader2, Mic, MicOff, Waves } from 'lucide-react';
+import { Send, Paperclip, Loader2, Mic, MicOff } from 'lucide-react';
 import { AgentStatus } from '../types';
 import { speechToTextService } from '../services/speechToTextService';
+import { DiamondIcon } from './DiamondIcon';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -134,7 +135,9 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
             </div>
           ) : (
             <>
-              <Sparkles className={`w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 md:mr-3 transition-colors duration-300 shrink-0 ${isBusy ? 'text-purple-400 animate-pulse' : 'text-white/50'}`} />
+              <div className={`mr-1.5 sm:mr-2 md:mr-3 shrink-0 transition-all duration-300 ${isBusy ? 'opacity-100' : 'opacity-50'}`}>
+                <DiamondIcon status={status} size={16} className="sm:w-5 sm:h-5" />
+              </div>
               <input
                 ref={inputRef}
                 type="text"

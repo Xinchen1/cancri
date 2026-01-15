@@ -530,6 +530,10 @@ Generate a final response that is accurate, complete, and well-structured.`;
 
         } else {
             // Simple mode: Direct response without debate
+            // Set status to THINKING first, then SPEAKING when outputting text
+            setStatus(AgentStatus.THINKING);
+            addLog("THINKING", "Processing query...", "info");
+            
             // Set status to SPEAKING when outputting text (for crystal dimming effect)
             setStatus(AgentStatus.SPEAKING);
             addLog("NEURAL", "Generating response...", "info");
