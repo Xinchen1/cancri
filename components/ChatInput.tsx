@@ -16,14 +16,28 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
   const [isRecording, setIsRecording] = useState(false);
   const [voiceText, setVoiceText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const isBusy = status !== AgentStatus.IDLE && status !== AgentStatus.VOICE_ACTIVE;
   const isIndexing = status === AgentStatus.INDEXING;
   const isVoice = status === AgentStatus.VOICE_ACTIVE;
 
   const handleSend = () => {
     if (value.trim() && !isBusy) {
-      onSend(value);
+      const textToSend = value.trim();
+      onSend(textToSend);
       setValue('');
+      
+      // 移动端：发送后失焦输入框，关闭键盘
+      if (inputRef.current) {
+        inputRef.current.blur();
+      }
+      
+      // 防止移动端页面缩放
+      // 确保 viewport 保持固定
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover');
+      }
     }
   };
 
@@ -42,11 +56,20 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
       setVoiceText('');
       if (finalText.trim()) {
         onSend(finalText);
+        // 移动端：发送后失焦，关闭键盘
+        if (inputRef.current) {
+          inputRef.current.blur();
+        }
       }
     } else {
       // 如果未在录音，开始录音
       setIsRecording(true);
       setVoiceText('');
+      
+      // 移动端：开始录音时，确保输入框失焦
+      if (inputRef.current) {
+        inputRef.current.blur();
+      }
       
       speechToTextService.startListening(
         (interimText) => {
@@ -57,6 +80,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
           setVoiceText('');
           if (finalText.trim()) {
             onSend(finalText);
+            // 移动端：发送后失焦，关闭键盘
+            if (inputRef.current) {
+              inputRef.current.blur();
+            }
           }
         },
         (error) => {
@@ -109,6 +136,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
             <>
               <Sparkles className={`w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2 md:mr-3 transition-colors duration-300 shrink-0 ${isBusy ? 'text-purple-400 animate-pulse' : 'text-white/50'}`} />
               <input
+                ref={inputRef}
                 type="text"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
