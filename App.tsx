@@ -46,6 +46,36 @@ const App: React.FC = () => {
     if (memory.messages.length > 0) setMessages(memory.messages);
     if (memory.logs.length > 0) setLogs(memory.logs);
     
+    // 监听 localStorage 变化，用于控制台打开管理后台
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'cancri_open_admin' && e.newValue === 'true') {
+        setIsAdminOpen(true);
+        localStorage.removeItem('cancri_open_admin');
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    
+    // 检查初始值
+    if (localStorage.getItem('cancri_open_admin') === 'true') {
+      setIsAdminOpen(true);
+      localStorage.removeItem('cancri_open_admin');
+    }
+    
+    // 暴露全局函数供控制台使用
+    (window as any).openAdminPanel = () => {
+      setIsAdminOpen(true);
+      console.log('✅ 管理后台已打开');
+    };
+    
+    (window as any).closeAdminPanel = () => {
+      setIsAdminOpen(false);
+      console.log('✅ 管理后台已关闭');
+    };
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+    
     // Load persisted keys from vault
     const savedMistral = localStorage.getItem('cancri_mistral_vault');
     
