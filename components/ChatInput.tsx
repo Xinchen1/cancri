@@ -109,7 +109,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
       <div className="w-full max-w-2xl">
       <div className={`relative group transition-all duration-500 ${isBusy && !isIndexing ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}`}>
         <div className={`absolute -inset-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full opacity-30 group-hover:opacity-70 blur transition duration-500 ${(isIndexing || isRecording) ? 'animate-pulse opacity-100' : ''}`}></div>
-        <div className="relative flex items-center bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 shadow-2xl w-full">
+        <div className="relative flex items-center bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-2 sm:px-3 md:px-4 py-2.5 sm:py-2.5 md:py-3 shadow-2xl w-full">
           
           <button 
             disabled={isBusy || isRecording}
@@ -154,20 +154,25 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
           <button 
             onClick={handleVoiceClick}
             disabled={isBusy || isIndexing}
-            className={`ml-1 sm:ml-1.5 md:ml-2 p-1.5 sm:p-2 rounded-full transition-all duration-300 shrink-0 ${
+            className={`ml-1 sm:ml-1.5 md:ml-2 p-2.5 sm:p-2 rounded-full transition-all duration-300 shrink-0 ${
               isRecording 
-                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/50 animate-pulse' 
-                : 'text-white/50 hover:text-white hover:bg-white/10'
-            }`}
+                ? 'bg-rose-500/30 text-rose-400 border-2 border-rose-500/70 animate-pulse shadow-[0_0_20px_rgba(244,63,94,0.5)]' 
+                : 'text-white bg-white/10 hover:bg-white/20 border border-white/20 shadow-[0_0_10px_rgba(255,255,255,0.2)]'
+            } sm:${isRecording ? 'bg-rose-500/20 border border-rose-500/50' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
             title={isRecording ? "Tap to stop" : "Tap to speak"}
           >
-            {isRecording ? <MicOff size={16} className="sm:w-5 sm:h-5" /> : <Mic size={16} className="sm:w-5 sm:h-5" />}
+            {isRecording ? (
+              <MicOff size={20} className="sm:w-5 sm:h-5" />
+            ) : (
+              <Mic size={20} className="sm:w-5 sm:h-5" />
+            )}
           </button>
 
+          {/* 桌面端显示发送按钮，移动端隐藏 */}
           <button 
             onClick={handleSend}
             disabled={(!value.trim() && !voiceText.trim()) || isBusy || isRecording}
-            className={`ml-1 sm:ml-1.5 md:ml-2 p-1.5 sm:p-2 rounded-full transition-all duration-300 shrink-0 ${
+            className={`hidden sm:flex ml-1.5 md:ml-2 p-1.5 sm:p-2 rounded-full transition-all duration-300 shrink-0 ${
               ((value.trim() || voiceText.trim()) && !isBusy && !isRecording) 
                 ? 'bg-white text-black hover:bg-cyan-200 shadow-[0_0_15px_rgba(255,255,255,0.3)]' 
                 : 'bg-white/5 text-white/20 cursor-not-allowed'
