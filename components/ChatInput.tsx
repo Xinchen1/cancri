@@ -124,6 +124,20 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
           
           <input type="file" ref={fileInputRef} onChange={(e) => e.target.files?.[0] && onFileUpload(e.target.files[0])} className="hidden" accept=".txt,.md,.json" />
 
+          {/* 深度思考开关按钮 - 桌面端显示 */}
+          <button
+            onClick={onToggleDeepThinking}
+            disabled={isBusy || isRecording}
+            className={`hidden sm:flex mr-1.5 md:mr-2 p-1.5 sm:p-2 rounded-full transition-all duration-300 shrink-0 ${
+              enableDeepThinking
+                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/50 shadow-[0_0_10px_rgba(168,85,247,0.3)]'
+                : 'text-white/30 hover:text-white/50 hover:bg-white/5'
+            } ${isBusy || isRecording ? 'opacity-20 cursor-not-allowed' : ''}`}
+            title={enableDeepThinking ? "深度思考已开启" : "点击开启深度思考"}
+          >
+            <Brain size={16} className="sm:w-4 sm:h-4" />
+          </button>
+
           {isRecording ? (
             <div className="flex-1 flex items-center gap-2 sm:gap-4 px-2 min-w-0">
               <div className="flex gap-0.5 sm:gap-1 items-center h-4 sm:h-6 shrink-0">

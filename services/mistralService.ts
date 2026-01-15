@@ -359,21 +359,34 @@ class CrystalService {
             }
           );
           
-          // Default to deep thinking unless explicitly marked as simple
+          // Only use deep thinking if enableDebate is true
           const isSimple = routeResponse.toUpperCase().includes('SIMPLE') && !routeResponse.toUpperCase().includes('DEEP');
-          if (isSimple) {
+          if (isSimple || !useDeepThinking) {
             baseModel = 'mistral-small-latest';
             useDeepThinking = false;
-            addLog("ROUTING", "Simple answer mode selected", "info");
+            addLog("ROUTING", "快速模式", "info");
+            // Set to THINKING for simple mode as well
+            setStatus(AgentStatus.THINKING);
+            addLog("THINKING", "思考中...", "info");
           } else {
             baseModel = 'mistral-large-latest';
             useDeepThinking = true;
-            addLog("ROUTING", "Deep thinking mode selected", "success");
+            addLog("ROUTING", "深度思考模式", "success");
+            // Set to THINKING when starting deep thinking
+            setStatus(AgentStatus.THINKING);
+            addLog("THINKING", "深度思考中...", "info");
           }
         } else {
-          // Pro mode or default: always use deep thinking
-          baseModel = 'mistral-large-latest';
-          useDeepThinking = true;
+          // Pro mode: use deep thinking only if enabled
+          if (useDeepThinking) {
+            baseModel = 'mistral-large-latest';
+            setStatus(AgentStatus.THINKING);
+            addLog("THINKING", "深度思考中...", "info");
+          } else {
+            baseModel = 'mistral-small-latest';
+            setStatus(AgentStatus.THINKING);
+            addLog("THINKING", "思考中...", "info");
+          }
         }
 
         const fullSystemInstruction = UNIVERSAL_LOVE_PROMPT.replace('{{USER_PROFILE_CONTEXT}}', context || '当前档案上下文为空。');
