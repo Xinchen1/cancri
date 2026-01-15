@@ -60,8 +60,8 @@ export const Conversation: React.FC<ConversationProps> = ({ messages }) => {
               
               {msg.metadata?.modelUsed && (
                 <div className="text-[10px] text-white/20 font-mono pl-1 flex items-center gap-2">
-                   <span>❖ {msg.metadata.modelUsed.toUpperCase()}</span> 
-                   {msg.metadata.provider === 'Mistral' && <span className="text-purple-500/60 uppercase tracking-tighter text-[8px] border border-purple-500/20 px-1 rounded">Neural Core</span>}
+                   <span>❖ CANCRI</span> 
+                   {msg.metadata.provider === 'Mistral' && <span className="text-purple-500/60 uppercase tracking-tighter text-[8px] border border-purple-500/20 px-1 rounded">CANCRI</span>}
                 </div>
               )}
             </div>
