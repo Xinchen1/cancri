@@ -81,23 +81,23 @@ export const Scene: React.FC<SceneProps> = ({ status }) => {
             setWebglSupported(true); // 允许继续尝试
           }}
         >
-          <color attach="background" args={['#050505']} />
-          
-          {/* Ambient Lighting */}
-          <ambientLight intensity={0.5} />
-          
-          {/* Dynamic Point Lights driven by status could be added here,
-              but we rely on the emissive material for the "glow" */}
-          <pointLight position={[10, 10, 10]} intensity={1} color="#ffffff" />
-          <pointLight position={[-10, -10, -10]} intensity={0.5} color="#4c1d95" />
+        <color attach="background" args={['#050505']} />
+        
+        {/* Ambient Lighting */}
+        <ambientLight intensity={0.5} />
+        
+        {/* Dynamic Point Lights driven by status could be added here, 
+            but we rely on the emissive material for the "glow" */}
+        <pointLight position={[10, 10, 10]} intensity={1} color="#ffffff" />
+        <pointLight position={[-10, -10, -10]} intensity={0.5} color="#4c1d95" />
 
-          <CrystalMesh status={status} />
-          
-          <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-          
-          {/* Allow user to inspect the crystal, but limit zoom */}
-          <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
-        </Canvas>
+        <CrystalMesh status={status} />
+        
+        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
+        
+        {/* Allow user to inspect the crystal, but limit zoom */}
+        <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
+      </Canvas>
       </Suspense>
       {errorMessage && (
         <div className="absolute bottom-4 left-4 z-10">

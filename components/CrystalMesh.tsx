@@ -11,24 +11,24 @@ export const CrystalMesh: React.FC<CrystalProps> = ({ status }) => {
   const outerRef = useRef<THREE.Mesh>(null);
   const innerRef = useRef<THREE.Mesh>(null);
   const [error, setError] = React.useState<string | null>(null);
-
+  
   const config = useMemo(() => {
     try {
-      switch(status) {
-        case AgentStatus.VOICE_ACTIVE:
+    switch(status) {
+      case AgentStatus.VOICE_ACTIVE:
           return { color: '#22d3ee', speed: 6.0, roughness: 0.05, emissive: 2.0, scale: 1.2, opacity: 1.0 };
-        case AgentStatus.ROUTING:
+      case AgentStatus.ROUTING:
           return { color: '#c084fc', speed: 2.5, roughness: 0.15, emissive: 0.8, scale: 1.0, opacity: 1.0 }; 
-        case AgentStatus.THINKING:
+      case AgentStatus.THINKING:
           return { color: '#7e22ce', speed: 4.0, roughness: 0.05, emissive: 1.5, scale: 1.1, opacity: 1.0 }; 
-        case AgentStatus.REFLECTING:
+      case AgentStatus.REFLECTING:
           return { color: '#fbbf24', speed: 0.8, roughness: 0.3, emissive: 0.6, scale: 1.05, opacity: 1.0 }; 
-        case AgentStatus.EVOLVING:
+      case AgentStatus.EVOLVING:
           return { color: '#f0abfc', speed: 10.0, roughness: 0.0, emissive: 2.0, scale: 1.3, opacity: 1.0 }; 
-        case AgentStatus.SPEAKING:
+      case AgentStatus.SPEAKING:
           return { color: '#22d3ee', speed: 1.5, roughness: 0.1, emissive: 0.3, scale: 1.0, opacity: 0.15 }; // 变淡，不影响阅读
-        case AgentStatus.IDLE:
-        default:
+      case AgentStatus.IDLE:
+      default:
           return { color: '#a855f7', speed: 0.4, roughness: 0.1, emissive: 0.2, scale: 1.0, opacity: 0.2 }; // 输出完成后变淡，方便阅读 
       }
     } catch (e) {
@@ -85,12 +85,12 @@ export const CrystalMesh: React.FC<CrystalProps> = ({ status }) => {
       
       // Safely access scale
       if (outerRef.current.scale && typeof outerRef.current.scale.lerp === 'function') {
-        const organicPulse = Math.sin(t * config.speed) * (status === AgentStatus.VOICE_ACTIVE ? 0.15 : 0.05);
-        const targetScale = 1.4 + organicPulse + (config.scale - 1.0);
+    const organicPulse = Math.sin(t * config.speed) * (status === AgentStatus.VOICE_ACTIVE ? 0.15 : 0.05);
+    const targetScale = 1.4 + organicPulse + (config.scale - 1.0);
         outerRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), safeDelta * 5);
       }
 
-      const outerMat = outerRef.current.material as THREE.MeshPhysicalMaterial;
+    const outerMat = outerRef.current.material as THREE.MeshPhysicalMaterial;
       if (!outerMat || typeof outerMat !== 'object') {
         console.error('[CrystalMesh] Outer material not found or invalid');
         return;
@@ -102,7 +102,7 @@ export const CrystalMesh: React.FC<CrystalProps> = ({ status }) => {
         return;
       }
       
-      const targetColor = new THREE.Color(config.color);
+    const targetColor = new THREE.Color(config.color);
       outerMat.color.lerp(targetColor, safeDelta * 2);
       outerMat.emissive.lerp(targetColor, safeDelta * 2);
       if (typeof outerMat.emissiveIntensity === 'number') {
@@ -118,7 +118,7 @@ export const CrystalMesh: React.FC<CrystalProps> = ({ status }) => {
       if (innerRef.current.rotation && typeof innerRef.current.rotation.x === 'number') {
         innerRef.current.rotation.x -= safeDelta * 0.1;
       }
-      const innerMat = innerRef.current.material as THREE.MeshStandardMaterial;
+    const innerMat = innerRef.current.material as THREE.MeshStandardMaterial;
       if (!innerMat || typeof innerMat !== 'object') {
         console.error('[CrystalMesh] Inner material not found or invalid');
         return;

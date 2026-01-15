@@ -50,9 +50,9 @@ export const Conversation: React.FC<ConversationProps> = ({ messages }) => {
                   </div>
                 ) : (
                   <>
-                    {msg.content}
-                    {msg.role === 'assistant' && !msg.content && !msg.metadata?.debate && (
-                      <span className="inline-block w-2 h-4 ml-1 bg-purple-400 animate-pulse align-middle" />
+                {msg.content}
+                {msg.role === 'assistant' && !msg.content && !msg.metadata?.debate && (
+                  <span className="inline-block w-2 h-4 ml-1 bg-purple-400 animate-pulse align-middle" />
                     )}
                   </>
                 )}

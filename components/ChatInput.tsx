@@ -182,7 +182,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
             <Send size={14} className="sm:w-[18px] sm:h-[18px]" />
           </button>
         </div>
-      </div>
+        </div>
       </div>
     </div>
   );

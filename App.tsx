@@ -63,8 +63,19 @@ const App: React.FC = () => {
     
     // 暴露全局函数供控制台使用
     (window as any).openAdminPanel = () => {
-      setIsAdminOpen(true);
-      console.log('✅ 管理后台已打开');
+      const password = prompt('请输入管理后台密码：');
+      if (!password) {
+        console.log('❌ 已取消');
+        return;
+      }
+      
+      if (adminService.verifyPassword(password)) {
+        setIsAdminOpen(true);
+        console.log('✅ 密码正确，管理后台已打开');
+      } else {
+        console.log('❌ 密码错误，访问被拒绝');
+        alert('密码错误，访问被拒绝');
+      }
     };
     
     (window as any).closeAdminPanel = () => {
@@ -241,7 +252,7 @@ const App: React.FC = () => {
   }
   
   try {
-    return (
+  return (
     <div className="relative w-screen h-screen overflow-hidden bg-black text-white selection:bg-purple-500/30">
       {sceneComponent}
       {status !== AgentStatus.VOICE_ACTIVE && <AudioPlayer isPlaying={audioEnabled} preset={audioPreset} />}
