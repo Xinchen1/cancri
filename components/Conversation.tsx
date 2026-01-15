@@ -175,23 +175,23 @@ const DebateBox = ({ debate, isGenerating }: { debate: Message['metadata']['deba
       )}
 
       {isOpen && (
-        <div ref={scrollRef} className="p-3 space-y-4 border-t border-white/10 bg-black/40 max-h-48 overflow-y-auto no-scrollbar">
+        <div ref={scrollRef} className="p-3 space-y-3 border-t border-white/5 bg-black/20 max-h-48 overflow-y-auto no-scrollbar">
           {debate.draft && (
-            <div className="space-y-1">
-              <div className="flex items-center gap-1.5 text-[9px] text-purple-400 uppercase font-bold">
-                <Zap size={10} /> Phase 1: Deep Thinking {debate.stage === 'drafting' && '...'}
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-1.5 text-[9px] text-purple-400/80 uppercase font-medium tracking-wider">
+                <Zap size={9} /> Phase 1: Deep Thinking {debate.stage === 'drafting' && '...'}
               </div>
-              <div className="text-[11px] text-white/50 font-light border-l border-purple-500/30 pl-3">
+              <div className="text-[11px] text-white/60 font-light leading-relaxed pl-3.5">
                 {debate.draft}
               </div>
             </div>
           )}
           {debate.critique && (
-            <div className="space-y-1 animate-in fade-in duration-700">
-              <div className="flex items-center gap-1.5 text-[9px] text-amber-500 uppercase font-bold">
-                <Scale size={10} /> Phase 2: Critical Reflection {debate.stage === 'critiquing' && '...'}
+            <div className="space-y-1.5 animate-in fade-in duration-700">
+              <div className="flex items-center gap-1.5 text-[9px] text-amber-400/80 uppercase font-medium tracking-wider">
+                <Scale size={9} /> Phase 2: Critical Reflection {debate.stage === 'critiquing' && '...'}
               </div>
-              <div className="text-[11px] text-amber-100/60 font-mono border-l border-amber-500/30 pl-3 italic">
+              <div className="text-[11px] text-amber-100/60 font-light leading-relaxed pl-3.5">
                 {debate.critique}
               </div>
             </div>
