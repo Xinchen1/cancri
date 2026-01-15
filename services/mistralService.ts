@@ -297,7 +297,8 @@ class CrystalService {
     config: CognitiveConfig,
     onChunk: (chunk: string, meta?: Message['metadata']) => void,
     addLog: (step: string, details: string, status: 'info' | 'success' | 'warning' | 'error') => void,
-    setStatus: (status: AgentStatus) => void
+    setStatus: (status: AgentStatus) => void,
+    enableDeepThinking: boolean = false
   ): Promise<void> {
     // Determine which keys to use
     const userKey = config.mistralKey && config.mistralKey.trim().length > 10 ? config.mistralKey : null;
@@ -328,65 +329,18 @@ class CrystalService {
           : "THE ARCHIVE IS CURRENTLY EMPTY OR NO RELEVANT DATA WAS FOUND.";
         const shortTerm = currentHistory.slice(-5).map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
 
-        // Determine model based on route and enableDebate setting
+        // Determine model based on enableDeepThinking parameter (manual toggle only)
         let baseModel = 'mistral-small-latest'; // Default to small model (fast mode)
-        let useDeepThinking = config.enableDebate; // Use config setting, default false
+        let useDeepThinking = enableDeepThinking; // Use manual toggle state
         
-        if (config.modelRoute === 'flash') {
-          // Flash mode: simple answers only
-          baseModel = 'mistral-small-latest';
-          useDeepThinking = false;
-        } else if (config.modelRoute === 'auto') {
-          // Auto mode: analyze query to determine if deep thinking needed
-          setStatus(AgentStatus.ROUTING);
-          addLog("ROUTING", "Analyzing query complexity...", "info");
-          const routeResponse = await this.tryWithFallback(
-            async (key) => {
-              addLog("ROUTING", `Trying API key ${keysToTry.indexOf(key) + 1}/${keysToTry.length}...`, "info");
-              return await this.callMistral(
-                key,
-                "You are a routing system. Analyze if the query requires deep reasoning, thinking, analysis, or complex problem-solving. Reply 'DEEP' if it requires thinking/reasoning, 'SIMPLE' for simple factual answers or greetings.",
-                `User Query: "${userText}". Does this require deep thinking or reasoning?`,
-                'mistral-small-latest',
-                0.1
-              );
-            },
-            keysToTry,
-            (error, index) => {
-              if (index < keysToTry.length - 1) {
-                addLog("ROUTING", `Key ${index + 1} failed, trying next...`, "warning");
-              }
-            }
-          );
-          
-          // Only use deep thinking if enableDebate is true
-          const isSimple = routeResponse.toUpperCase().includes('SIMPLE') && !routeResponse.toUpperCase().includes('DEEP');
-          if (isSimple || !useDeepThinking) {
-            baseModel = 'mistral-small-latest';
-            useDeepThinking = false;
-            addLog("ROUTING", "快速模式", "info");
-            // Set to THINKING for simple mode as well
-            setStatus(AgentStatus.THINKING);
-            addLog("THINKING", "思考中...", "info");
-          } else {
-            baseModel = 'mistral-large-latest';
-            useDeepThinking = true;
-            addLog("ROUTING", "深度思考模式", "success");
-            // Set to THINKING when starting deep thinking
-            setStatus(AgentStatus.THINKING);
-            addLog("THINKING", "深度思考中...", "info");
-          }
+        if (useDeepThinking) {
+          baseModel = 'mistral-large-latest';
+          setStatus(AgentStatus.THINKING);
+          addLog("THINKING", "深度思考中...", "info");
         } else {
-          // Pro mode: use deep thinking only if enabled
-          if (useDeepThinking) {
-            baseModel = 'mistral-large-latest';
-            setStatus(AgentStatus.THINKING);
-            addLog("THINKING", "深度思考中...", "info");
-          } else {
-            baseModel = 'mistral-small-latest';
-            setStatus(AgentStatus.THINKING);
-            addLog("THINKING", "思考中...", "info");
-          }
+          baseModel = 'mistral-small-latest';
+          setStatus(AgentStatus.THINKING);
+          addLog("THINKING", "思考中...", "info");
         }
 
         const fullSystemInstruction = UNIVERSAL_LOVE_PROMPT.replace('{{USER_PROFILE_CONTEXT}}', context || '当前档案上下文为空。');

@@ -1,5 +1,5 @@
 
-import { GoogleGenAI } from "@google/genai";
+import { apiService } from "./apiService";
 import { SemanticMemory, FileMetadata } from "../types";
 
 const DB_NAME = "Cancri_Akasha_Records";
@@ -15,9 +15,41 @@ export interface IngestionProgress {
 
 class VectorDbService {
   private db: IDBDatabase | null = null;
+  
+  // Default API keys with fallback mechanism (same as mistralService)
+  private readonly DEFAULT_API_KEYS = [
+    'DTgY0qu4RdlxToCnyLXQtSR2shuJSpqB',
+    'pY7VYlkMd4YpVnZGiPKxRzoyRoWwCGf7',
+    'YiKPvyRkLI9ahjwcSC1VSa6xIH5r3TXyAIzaS'
+  ];
 
   constructor() {
     this.initDB();
+  }
+  
+  private async tryWithFallback<T>(
+    fn: (key: string) => Promise<T>,
+    keys: string[],
+    onError?: (error: Error, index: number) => void
+  ): Promise<T> {
+    let lastError: Error | null = null;
+    
+    for (let i = 0; i < keys.length; i++) {
+      try {
+        return await fn(keys[i]);
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        if (onError) {
+          onError(lastError, i);
+        }
+        if (i < keys.length - 1) {
+          // Wait a bit before trying next key
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      }
+    }
+    
+    throw lastError || new Error("All API keys failed");
   }
 
   private async initDB(): Promise<void> {
@@ -45,19 +77,31 @@ class VectorDbService {
   }
 
   private async generateBatchEmbeddings(texts: string[]): Promise<number[][]> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    // Use default API keys (no user key needed for document upload)
+    const keysToTry = this.DEFAULT_API_KEYS;
     const results: number[][] = [];
+    
     for (const text of texts) {
       try {
-        const res = await ai.models.embedContent({
-          model: "text-embedding-004",
-          contents: text, 
-        });
-        if (res.embeddings?.[0]?.values) {
-          results.push(res.embeddings[0].values);
+        const embedding = await this.tryWithFallback(
+          async (key) => {
+            return await apiService.embed({ text, apiKey: key });
+          },
+          keysToTry,
+          (error, index) => {
+            if (index < keysToTry.length - 1) {
+              console.warn(`Embedding API key ${index + 1} failed, trying next...`);
+            }
+          }
+        );
+        
+        if (embedding && embedding.length > 0) {
+          results.push(embedding);
         }
       } catch (e) {
         console.error("Embedding chunk failed", e);
+        // Push empty array to maintain batch order
+        results.push([]);
       }
     }
     return results;
@@ -154,9 +198,25 @@ class VectorDbService {
   }
 
   private async generateEmbedding(text: string): Promise<number[]> {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-    const res = await ai.models.embedContent({ model: "text-embedding-004", contents: text });
-    return res.embeddings?.[0]?.values || [];
+    // Use default API keys (no user key needed for document recall)
+    const keysToTry = this.DEFAULT_API_KEYS;
+    
+    try {
+      return await this.tryWithFallback(
+        async (key) => {
+          return await apiService.embed({ text, apiKey: key });
+        },
+        keysToTry,
+        (error, index) => {
+          if (index < keysToTry.length - 1) {
+            console.warn(`Embedding API key ${index + 1} failed, trying next...`);
+          }
+        }
+      );
+    } catch (e) {
+      console.error("Embedding generation failed", e);
+      return [];
+    }
   }
 
   async remember(text: string, type: SemanticMemory['type'], source?: string, fileId?: string): Promise<void> {
