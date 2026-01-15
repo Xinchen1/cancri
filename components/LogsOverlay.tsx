@@ -1,7 +1,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { LogEntry } from '../types';
-import { Terminal, CheckCircle2, AlertCircle, Cpu, ChevronRight, ChevronLeft, ListFilter } from 'lucide-react';
+import { Terminal, CheckCircle2, AlertCircle, Cpu, ChevronRight, ChevronLeft } from 'lucide-react';
 
 interface LogsOverlayProps {
   logs: LogEntry[];
@@ -27,7 +27,7 @@ export const LogsOverlay: React.FC<LogsOverlayProps> = ({ logs }) => {
           isExpanded ? 'bg-purple-900/40 border-purple-500/50 text-white' : 'bg-black/60 border-white/10 text-white/40 hover:text-white'
         }`}
       >
-        {isExpanded ? <ChevronRight size={18} /> : <ListFilter size={18} />}
+        {isExpanded ? <ChevronRight size={18} /> : <Terminal size={18} />}
       </button>
 
       <div className={`mt-4 w-full bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 font-mono text-[10px] overflow-hidden flex flex-col shadow-2xl transition-all duration-500 ${

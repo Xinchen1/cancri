@@ -77,7 +77,8 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
   }, [isRecording]);
 
   return (
-    <div className="fixed bottom-4 sm:bottom-8 md:bottom-10 left-1/2 -translate-x-1/2 w-[calc(100%-1rem)] sm:w-[calc(100%-3rem)] md:w-full max-w-2xl z-20">
+    <div className="fixed bottom-4 sm:bottom-8 md:bottom-10 left-0 right-0 flex justify-center z-20 px-2 sm:px-6">
+      <div className="w-full max-w-2xl">
       <div className={`relative group transition-all duration-500 ${isBusy && !isIndexing ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}`}>
         <div className={`absolute -inset-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full opacity-30 group-hover:opacity-70 blur transition duration-500 ${(isIndexing || isRecording) ? 'animate-pulse opacity-100' : ''}`}></div>
         <div className="relative flex items-center bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-2 sm:px-3 md:px-4 py-2 sm:py-2.5 md:py-3 shadow-2xl w-full">
@@ -149,6 +150,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
             <Send size={14} className="sm:w-[18px] sm:h-[18px]" />
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
