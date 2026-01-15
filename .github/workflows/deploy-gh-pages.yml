@@ -39,6 +39,7 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           CI: true
           NODE_ENV: production
+          BASE_PATH: /cancri/
         run: npm run build
 
       - name: Setup Pages
