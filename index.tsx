@@ -135,15 +135,36 @@ try {
   const root = ReactDOM.createRoot(rootElement);
   console.log('[CANCRI] Root created:', root);
   
-  root.render(
-    <React.StrictMode>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </React.StrictMode>
-  );
+  // 添加渲染前的最后检查
+  console.log('[CANCRI] About to render React app...');
+  console.log('[CANCRI] React version:', React.version);
+  console.log('[CANCRI] ReactDOM version:', ReactDOM.version);
   
-  console.log('[CANCRI] React app rendered successfully');
+  try {
+    root.render(
+      <React.StrictMode>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </React.StrictMode>
+    );
+    
+    console.log('[CANCRI] React app rendered successfully');
+    
+    // 验证渲染结果
+    setTimeout(() => {
+      const rootEl = document.getElementById('root');
+      if (rootEl && rootEl.children.length === 0) {
+        console.error('[CANCRI] WARNING: Root element is still empty after render!');
+        console.error('[CANCRI] This suggests React failed to render or ErrorBoundary caught an error');
+      } else {
+        console.log('[CANCRI] Root element has children:', rootEl?.children.length);
+      }
+    }, 1000);
+  } catch (renderError) {
+    console.error('[CANCRI] Failed to render React app:', renderError);
+    throw renderError;
+  }
   
   // Remove loading indicator after render
   setTimeout(() => {

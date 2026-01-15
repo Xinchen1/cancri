@@ -193,8 +193,11 @@ const App: React.FC = () => {
   };
 
   console.log('[App] Rendering component, status:', status);
-
-  return (
+  console.log('[App] Messages count:', messages.length);
+  console.log('[App] Logs count:', logs.length);
+  
+  try {
+    return (
     <div className="relative w-screen h-screen overflow-hidden bg-black text-white selection:bg-purple-500/30">
       <Scene status={status} />
       {status !== AgentStatus.VOICE_ACTIVE && <AudioPlayer isPlaying={audioEnabled} preset={audioPreset} />}
@@ -246,6 +249,17 @@ const App: React.FC = () => {
       </div>
     </div>
   );
+  } catch (renderError) {
+    console.error('[App] Render error:', renderError);
+    return (
+      <div className="relative w-screen h-screen overflow-hidden bg-black text-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl text-red-400 mb-4">渲染错误</h1>
+          <p className="text-sm text-white/60">{renderError instanceof Error ? renderError.message : String(renderError)}</p>
+        </div>
+      </div>
+    );
+  }
 };
 
 export default App;

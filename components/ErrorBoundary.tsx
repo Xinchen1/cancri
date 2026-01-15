@@ -16,6 +16,9 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
+    console.error('[CANCRI] ErrorBoundary: getDerivedStateFromError called with:', error);
+    console.error('[CANCRI] ErrorBoundary: Error message:', error.message);
+    console.error('[CANCRI] ErrorBoundary: Error stack:', error.stack);
     return { hasError: true, error };
   }
 
