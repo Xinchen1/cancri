@@ -31,11 +31,12 @@ const App: React.FC = () => {
   
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [audioPreset, setAudioPreset] = useState<AudioPreset>(AudioPreset.CELESTIAL);
+  const [enableDeepThinking, setEnableDeepThinking] = useState(false); // 默认关闭深度思考
   const [cognitiveConfig, setCognitiveConfig] = useState<CognitiveConfig>({
     temperature: 0.7,
     thinkingBudget: 4096,
     modelRoute: 'auto',
-    enableDebate: true,
+    enableDebate: false, // 默认关闭，由用户手动开启
     mistralKey: ''
   });
 

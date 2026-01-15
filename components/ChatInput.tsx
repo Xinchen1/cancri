@@ -1,6 +1,6 @@
 
 import React, { useState, KeyboardEvent, useRef, useEffect } from 'react';
-import { Send, Paperclip, Loader2, Mic, MicOff } from 'lucide-react';
+import { Send, Paperclip, Loader2, Mic, MicOff, Brain } from 'lucide-react';
 import { AgentStatus } from '../types';
 import { speechToTextService } from '../services/speechToTextService';
 import { DiamondIcon } from './DiamondIcon';
@@ -10,9 +10,11 @@ interface ChatInputProps {
   onFileUpload: (file: File) => void;
   onVoiceToggle: () => void;
   status: AgentStatus;
+  enableDeepThinking: boolean;
+  onToggleDeepThinking: () => void;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVoiceToggle, status }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVoiceToggle, status, enableDeepThinking, onToggleDeepThinking }) => {
   const [value, setValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [voiceText, setVoiceText] = useState('');

@@ -328,9 +328,9 @@ class CrystalService {
           : "THE ARCHIVE IS CURRENTLY EMPTY OR NO RELEVANT DATA WAS FOUND.";
         const shortTerm = currentHistory.slice(-5).map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
 
-        // Determine model based on route - Default to deep thinking mode
-        let baseModel = 'mistral-large-latest'; // Default to large model for deep thinking
-        let useDeepThinking = true; // Default enable deep thinking
+        // Determine model based on route and enableDebate setting
+        let baseModel = 'mistral-small-latest'; // Default to small model (fast mode)
+        let useDeepThinking = config.enableDebate; // Use config setting, default false
         
         if (config.modelRoute === 'flash') {
           // Flash mode: simple answers only
