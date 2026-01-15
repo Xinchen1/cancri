@@ -177,44 +177,79 @@
       
       try {
         // 检查主页面是否存在
-        const mainPageUrl = window.location.pathname.replace('/debug.html', '/index.html');
-        statusEl.innerHTML = `<p>检查主页面: <code>${mainPageUrl}</code></p>`;
+        const basePath = window.location.pathname.split('/').slice(0, -1).join('/') || '/cancri';
+        const mainPageUrl = basePath + '/index.html';
+        const mainPageRoot = basePath + '/';
+        
+        statusEl.innerHTML = `<p>检查主页面:</p><ul style="margin: 10px 0; padding-left: 20px;"><li><code>${mainPageUrl}</code></li><li><code>${mainPageRoot}</code></li></ul>`;
         
         // 尝试访问主页面
-        fetch(mainPageUrl)
-          .then(res => {
-            if (res.ok) {
-              statusEl.innerHTML = '<p class="success">✅ 主页面存在</p><p><a href="' + mainPageUrl + '" style="color: #22d3ee;">点击访问主页面</a></p>';
-            } else {
-              statusEl.innerHTML = `<p class="error">❌ 主页面返回状态码: ${res.status}</p>`;
-            }
-          })
-          .catch(e => {
-            statusEl.innerHTML = `<p class="error">❌ 无法访问主页面: ${e.message}</p>`;
-          });
-        
-        // 检查主应用的脚本
-        const scripts = document.querySelectorAll('script[type="module"]');
-        if (scripts.length > 0) {
-          const mainScript = Array.from(scripts).find(s => s.src && s.src.includes('assets'));
-          if (mainScript) {
-            statusEl.innerHTML += `<p>找到主脚本: <code>${mainScript.src}</code></p>`;
-            // 测试脚本是否可访问
-            fetch(mainScript.src, { method: 'HEAD' })
-              .then(res => {
-                if (res.ok) {
-                  statusEl.innerHTML += '<p class="success">✅ 主脚本可访问</p>';
-                } else {
-                  statusEl.innerHTML += `<p class="error">❌ 主脚本返回状态码: ${res.status}</p>`;
-                }
+        Promise.all([
+          fetch(mainPageUrl).catch(() => ({ ok: false, status: 'error' })),
+          fetch(mainPageRoot).catch(() => ({ ok: false, status: 'error' }))
+        ]).then(([res1, res2]) => {
+          if (res1.ok || res2.ok) {
+            statusEl.innerHTML += '<p class="success">✅ 主页面存在</p>';
+            statusEl.innerHTML += `<p><a href="${mainPageRoot}" style="color: #22d3ee; text-decoration: underline;">点击访问主页面</a></p>`;
+            
+            // 获取主页面内容并检查资源
+            fetch(res1.ok ? mainPageUrl : mainPageRoot)
+              .then(r => r.text())
+              .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const scripts = doc.querySelectorAll('script[type="module"]');
+                const styles = doc.querySelectorAll('link[rel="stylesheet"]');
+                
+                statusEl.innerHTML += `<p>主页面资源:</p><ul style="margin: 10px 0; padding-left: 20px;"><li>脚本: ${scripts.length} 个</li><li>样式表: ${styles.length} 个</li></ul>`;
+                
+                // 检查每个脚本是否可访问
+                scripts.forEach((script, i) => {
+                  if (script.src) {
+                    const scriptUrl = script.src.startsWith('http') ? script.src : window.location.origin + script.src;
+                    fetch(scriptUrl, { method: 'HEAD' })
+                      .then(res => {
+                        if (res.ok) {
+                          statusEl.innerHTML += `<p class="success">✅ 脚本 ${i + 1} 可访问: <code style="font-size: 11px;">${script.src}</code></p>`;
+                        } else {
+                          statusEl.innerHTML += `<p class="error">❌ 脚本 ${i + 1} 返回 ${res.status}: <code style="font-size: 11px;">${script.src}</code></p>`;
+                        }
+                      })
+                      .catch(e => {
+                        statusEl.innerHTML += `<p class="error">❌ 脚本 ${i + 1} 无法访问: <code style="font-size: 11px;">${script.src}</code> - ${e.message}</p>`;
+                      });
+                  }
+                });
+                
+                // 检查样式表
+                styles.forEach((style, i) => {
+                  if (style.href) {
+                    const styleUrl = style.href.startsWith('http') ? style.href : window.location.origin + style.href;
+                    fetch(styleUrl, { method: 'HEAD' })
+                      .then(res => {
+                        if (res.ok) {
+                          statusEl.innerHTML += `<p class="success">✅ 样式表 ${i + 1} 可访问: <code style="font-size: 11px;">${style.href}</code></p>`;
+                        } else {
+                          statusEl.innerHTML += `<p class="error">❌ 样式表 ${i + 1} 返回 ${res.status}: <code style="font-size: 11px;">${style.href}</code></p>`;
+                        }
+                      })
+                      .catch(e => {
+                        statusEl.innerHTML += `<p class="error">❌ 样式表 ${i + 1} 无法访问: <code style="font-size: 11px;">${style.href}</code> - ${e.message}</p>`;
+                      });
+                  }
+                });
               })
               .catch(e => {
-                statusEl.innerHTML += `<p class="error">❌ 无法访问主脚本: ${e.message}</p>`;
+                statusEl.innerHTML += `<p class="error">❌ 无法解析主页面: ${e.message}</p>`;
               });
+          } else {
+            statusEl.innerHTML += `<p class="error">❌ 主页面不存在 (${res1.status || 'error'})</p>`;
+            statusEl.innerHTML += `<p>请检查 GitHub Pages 部署是否成功</p>`;
           }
-        }
+        });
       } catch (e) {
         statusEl.innerHTML = `<p class="error">❌ 检查失败: ${e.message}</p>`;
+        console.error('loadApp error:', e);
       }
     };
     
