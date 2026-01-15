@@ -29,7 +29,7 @@ export const CrystalMesh: React.FC<CrystalProps> = ({ status }) => {
           return { color: '#22d3ee', speed: 1.5, roughness: 0.1, emissive: 0.3, scale: 1.0, opacity: 0.15 }; // 变淡，不影响阅读
         case AgentStatus.IDLE:
         default:
-          return { color: '#a855f7', speed: 0.4, roughness: 0.1, emissive: 0.4, scale: 1.0, opacity: 1.0 }; 
+          return { color: '#a855f7', speed: 0.4, roughness: 0.1, emissive: 0.2, scale: 1.0, opacity: 0.2 }; // 输出完成后变淡，方便阅读 
       }
     } catch (e) {
       console.error('Config error:', e);
@@ -125,7 +125,9 @@ export const CrystalMesh: React.FC<CrystalProps> = ({ status }) => {
       }
       
       if (typeof innerMat.emissiveIntensity === 'number') {
-        innerMat.emissiveIntensity = 2 + Math.sin(t * 10) * 0.5;
+        // 根据状态调整内部发光强度，IDLE 时更淡
+        const baseIntensity = status === AgentStatus.IDLE ? 0.3 : 2;
+        innerMat.emissiveIntensity = baseIntensity + Math.sin(t * 10) * (status === AgentStatus.IDLE ? 0.1 : 0.5);
       }
       // 内部水晶也变淡
       if (typeof innerMat.opacity === 'number') {
