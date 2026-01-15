@@ -154,15 +154,14 @@
     });
     document.getElementById('styles-list').appendChild(stylesList);
     
-    // 环境变量
+    // 环境变量（注意：在非模块脚本中无法使用 import.meta）
     try {
       const envInfo = document.createElement('pre');
       envInfo.textContent = JSON.stringify({
-        VITE_API_BASE_URL: import.meta.env?.VITE_API_BASE_URL,
-        MODE: import.meta.env?.MODE,
-        PROD: import.meta.env?.PROD,
-        DEV: import.meta.env?.DEV,
-        BASE_URL: import.meta.env?.BASE_URL
+        note: '环境变量在构建时注入，运行时无法直接访问',
+        suggestion: '检查构建时的环境变量配置',
+        currentURL: window.location.href,
+        basePath: window.location.pathname.split('/').slice(0, -1).join('/') || '/'
       }, null, 2);
       document.getElementById('env-info').appendChild(envInfo);
     } catch (e) {
@@ -171,39 +170,53 @@
     
     updateErrors();
     
-    // 测试加载主应用
-    async function loadApp() {
+    // 测试加载主应用（定义在全局作用域）
+    window.loadApp = async function() {
       const statusEl = document.getElementById('app-status');
-      statusEl.innerHTML = '<p class="warning">⏳ 正在加载...</p>';
+      statusEl.innerHTML = '<p class="warning">⏳ 正在检查主应用...</p>';
       
       try {
-        // 尝试动态导入主应用
+        // 检查主页面是否存在
+        const mainPageUrl = window.location.pathname.replace('/debug.html', '/index.html');
+        statusEl.innerHTML = `<p>检查主页面: <code>${mainPageUrl}</code></p>`;
+        
+        // 尝试访问主页面
+        fetch(mainPageUrl)
+          .then(res => {
+            if (res.ok) {
+              statusEl.innerHTML = '<p class="success">✅ 主页面存在</p><p><a href="' + mainPageUrl + '" style="color: #22d3ee;">点击访问主页面</a></p>';
+            } else {
+              statusEl.innerHTML = `<p class="error">❌ 主页面返回状态码: ${res.status}</p>`;
+            }
+          })
+          .catch(e => {
+            statusEl.innerHTML = `<p class="error">❌ 无法访问主页面: ${e.message}</p>`;
+          });
+        
+        // 检查主应用的脚本
         const scripts = document.querySelectorAll('script[type="module"]');
         if (scripts.length > 0) {
           const mainScript = Array.from(scripts).find(s => s.src && s.src.includes('assets'));
           if (mainScript) {
-            statusEl.innerHTML = `<p>找到主脚本: ${mainScript.src}</p>`;
-            // 检查脚本是否已加载
-            const testScript = document.createElement('script');
-            testScript.type = 'module';
-            testScript.src = mainScript.src;
-            testScript.onload = () => {
-              statusEl.innerHTML = '<p class="success">✅ 脚本加载成功</p>';
-            };
-            testScript.onerror = (e) => {
-              statusEl.innerHTML = `<p class="error">❌ 脚本加载失败: ${e}</p>`;
-            };
-            document.head.appendChild(testScript);
-          } else {
-            statusEl.innerHTML = '<p class="error">❌ 未找到主脚本</p>';
+            statusEl.innerHTML += `<p>找到主脚本: <code>${mainScript.src}</code></p>`;
+            // 测试脚本是否可访问
+            fetch(mainScript.src, { method: 'HEAD' })
+              .then(res => {
+                if (res.ok) {
+                  statusEl.innerHTML += '<p class="success">✅ 主脚本可访问</p>';
+                } else {
+                  statusEl.innerHTML += `<p class="error">❌ 主脚本返回状态码: ${res.status}</p>`;
+                }
+              })
+              .catch(e => {
+                statusEl.innerHTML += `<p class="error">❌ 无法访问主脚本: ${e.message}</p>`;
+              });
           }
-        } else {
-          statusEl.innerHTML = '<p class="error">❌ 未找到任何模块脚本</p>';
         }
       } catch (e) {
-        statusEl.innerHTML = `<p class="error">❌ 加载失败: ${e.message}</p>`;
+        statusEl.innerHTML = `<p class="error">❌ 检查失败: ${e.message}</p>`;
       }
-    }
+    };
     
     // 自动检查资源加载状态
     setTimeout(() => {
