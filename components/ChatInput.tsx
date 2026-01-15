@@ -31,33 +31,11 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
     if (e.key === 'Enter') handleSend();
   };
 
-  const handleVoicePressStart = () => {
-    if (isBusy || isRecording) return;
+  const handleVoiceClick = () => {
+    if (isBusy || isIndexing) return;
     
-    setIsRecording(true);
-    setVoiceText('');
-    
-    speechToTextService.startListening(
-      (interimText) => {
-        setVoiceText(interimText);
-      },
-      (finalText) => {
-        setIsRecording(false);
-        setVoiceText('');
-        if (finalText.trim()) {
-          onSend(finalText);
-        }
-      },
-      (error) => {
-        console.error('Speech recognition error:', error);
-        setIsRecording(false);
-        setVoiceText('');
-      }
-    );
-  };
-
-  const handleVoicePressEnd = () => {
     if (isRecording) {
+      // 如果正在录音，停止录音并发送
       speechToTextService.stopListening();
       const finalText = speechToTextService.getCurrentTranscript();
       setIsRecording(false);
@@ -65,6 +43,28 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
       if (finalText.trim()) {
         onSend(finalText);
       }
+    } else {
+      // 如果未在录音，开始录音
+      setIsRecording(true);
+      setVoiceText('');
+      
+      speechToTextService.startListening(
+        (interimText) => {
+          setVoiceText(interimText);
+        },
+        (finalText) => {
+          setIsRecording(false);
+          setVoiceText('');
+          if (finalText.trim()) {
+            onSend(finalText);
+          }
+        },
+        (error) => {
+          console.error('Speech recognition error:', error);
+          setIsRecording(false);
+          setVoiceText('');
+        }
+      );
     }
   };
 
@@ -121,18 +121,14 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
           )}
           
           <button 
-            onMouseDown={handleVoicePressStart}
-            onMouseUp={handleVoicePressEnd}
-            onMouseLeave={handleVoicePressEnd}
-            onTouchStart={handleVoicePressStart}
-            onTouchEnd={handleVoicePressEnd}
+            onClick={handleVoiceClick}
             disabled={isBusy || isIndexing}
             className={`ml-1 sm:ml-1.5 md:ml-2 p-1.5 sm:p-2 rounded-full transition-all duration-300 shrink-0 ${
               isRecording 
                 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/50 animate-pulse' 
                 : 'text-white/50 hover:text-white hover:bg-white/10'
             }`}
-            title="Hold to speak"
+            title={isRecording ? "Tap to stop" : "Tap to speak"}
           >
             {isRecording ? <MicOff size={16} className="sm:w-5 sm:h-5" /> : <Mic size={16} className="sm:w-5 sm:h-5" />}
           </button>

@@ -34,6 +34,9 @@ class SpeechToTextService {
           if (final) {
             this.finalTranscript += final + ' ';
             this.lastSpeechTime = Date.now();
+          } else if (interim) {
+            // 更新最后活动时间，即使只是临时结果
+            this.lastSpeechTime = Date.now();
           }
         };
 
@@ -42,7 +45,15 @@ class SpeechToTextService {
         };
 
         this.recognition.onend = () => {
-          this.isListening = false;
+          // 如果还在监听状态，可能是临时停止，尝试重新启动
+          if (this.isListening) {
+            try {
+              this.recognition.start();
+            } catch (e) {
+              // 如果无法重新启动，停止监听
+              this.isListening = false;
+            }
+          }
         };
       }
     }
@@ -88,20 +99,26 @@ class SpeechToTextService {
 
       const silenceDuration = Date.now() - this.lastSpeechTime;
       const hasFinalText = this.finalTranscript.trim().length > 0;
+      const hasInterimText = this.interimTranscript.trim().length > 0;
+      const hasAnyText = hasFinalText || hasInterimText;
       
       // Update interim results
       const currentText = (this.finalTranscript + this.interimTranscript).trim();
       onInterimResult(currentText);
 
-      // Auto-send after 2 seconds of silence and has text
-      if (hasFinalText && silenceDuration > 2000) {
+      // Auto-send after 1.5 seconds of silence and has text
+      // 如果有最终文本，使用最终文本；否则使用临时文本
+      if (hasAnyText && silenceDuration > 1500) {
         this.stopListening();
-        onFinalResult(this.finalTranscript.trim());
+        const textToSend = hasFinalText ? this.finalTranscript.trim() : this.interimTranscript.trim();
+        if (textToSend) {
+          onFinalResult(textToSend);
+        }
         return;
       }
 
       // Continue checking
-      this.silenceTimer = setTimeout(checkSilence, 500);
+      this.silenceTimer = setTimeout(checkSilence, 300);
     };
 
     checkSilence();
