@@ -19,7 +19,7 @@ export const IndexingOverlay: React.FC<IndexingOverlayProps> = ({ isVisible, pro
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-xl animate-in fade-in duration-500">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black backdrop-blur-xl animate-in fade-in duration-500">
       <div className="relative w-full max-w-lg p-10 space-y-10 text-center">
         
         {/* Holographic Glow Effect */}

@@ -11,10 +11,11 @@ interface ChatInputProps {
   onVoiceToggle: () => void;
   status: AgentStatus;
   enableDeepThinking: boolean;
+  attachmentCount?: number;
   onToggleDeepThinking: () => void;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVoiceToggle, status, enableDeepThinking, onToggleDeepThinking }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVoiceToggle, status, enableDeepThinking, attachmentCount = 0, onToggleDeepThinking }) => {
   const [value, setValue] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [voiceText, setVoiceText] = useState('');
@@ -116,10 +117,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
           <button 
             disabled={isBusy || isRecording}
             onClick={() => fileInputRef.current?.click()}
-            className={`mr-1 sm:mr-2 md:mr-3 p-1.5 sm:p-2 rounded-full transition-all hover:bg-white/10 shrink-0 ${isBusy || isRecording ? 'opacity-20' : 'text-white/50 hover:text-white'}`}
+            className={`relative mr-1 sm:mr-2 md:mr-3 p-1.5 sm:p-2 rounded-full transition-all hover:bg-white/10 shrink-0 ${isBusy || isRecording ? 'opacity-20' : 'text-white/50 hover:text-white'}`}
             title="Upload file"
           >
             {isIndexing ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-cyan-400" /> : <Paperclip size={16} className="sm:w-5 sm:h-5" />}
+            {attachmentCount > 0 && !isIndexing && (
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-purple-500 text-white text-[10px] font-bold rounded-full border-2 border-black/60">
+                {attachmentCount}
+              </span>
+            )}
           </button>
           
           <input type="file" ref={fileInputRef} onChange={(e) => e.target.files?.[0] && onFileUpload(e.target.files[0])} className="hidden" accept=".txt,.md,.json" />

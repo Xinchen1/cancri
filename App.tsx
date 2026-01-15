@@ -29,6 +29,9 @@ const App: React.FC = () => {
   const [indexingStats, setIndexingStats] = useState({ current: 0, total: 0 });
   const [currentFileName, setCurrentFileName] = useState('');
   
+  // 附件列表（单次对话使用，与设置中的记忆库不同）
+  const [attachments, setAttachments] = useState<Array<{ id: string; name: string; content: string }>>([]);
+  
   const [audioEnabled, setAudioEnabled] = useState(true);
   const [audioPreset, setAudioPreset] = useState<AudioPreset>(AudioPreset.CELESTIAL);
   const [enableDeepThinking, setEnableDeepThinking] = useState(false); // 默认关闭深度思考
@@ -129,9 +132,23 @@ const App: React.FC = () => {
   }, []);
 
   const handleSendMessage = async (text: string) => {
-    if (!text.trim()) return;
+    if (!text.trim() && attachments.length === 0) return;
     
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text, timestamp: Date.now() };
+    // 如果有附件，将附件内容附加到消息中
+    let messageContent = text.trim();
+    if (attachments.length > 0) {
+      const attachmentContext = attachments.map(att => 
+        `[ATTACHMENT: ${att.name}]\n${att.content}\n[END OF ATTACHMENT: ${att.name}]`
+      ).join('\n\n');
+      messageContent = messageContent 
+        ? `${messageContent}\n\n${attachmentContext}`
+        : attachmentContext;
+      
+      // 发送后清空附件列表
+      setAttachments([]);
+    }
+    
+    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: messageContent, timestamp: Date.now() };
     setMessages(prev => [...prev, userMsg]);
 
     const assistantMsgId = (Date.now() + 1).toString();
@@ -141,7 +158,7 @@ const App: React.FC = () => {
     const currentConfig = { ...cognitiveConfig };
 
     await crystalService.processUserMessageStream(
-        text, 
+        messageContent, 
         messages, 
         currentConfig,
         async (fullText, meta) => {
@@ -208,32 +225,31 @@ const App: React.FC = () => {
     setIndexingProgress(0);
     setIndexingStats({ current: 0, total: 0 });
     setCurrentFileName(file.name);
-    addLog("AKASHA", `Archive Uplink: ${file.name}`, "info");
+    addLog("ATTACHMENT", `Processing attachment: ${file.name}`, "info");
     
     try {
-      setIndexingProgress(5);
+      setIndexingProgress(10);
       const text = await file.text();
-      setIndexingProgress(15);
+      setIndexingProgress(50);
       
-      await vectorDbService.ingestDocument(text, file.name, (prog) => {
-        const adjustedProgress = 15 + (prog.percent * 0.85);
-        setIndexingProgress(adjustedProgress);
-        setIndexingStats({ current: prog.currentChunk, total: prog.totalChunks });
-        
-        if (prog.currentChunk % 25 === 0 || prog.currentChunk === prog.totalChunks) {
-          addLog("AKASHA", `Analyzing Fragments: ${prog.currentChunk}/${prog.totalChunks}`, "success");
-        }
-      });
+      // 模拟处理进度
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setIndexingProgress(80);
       
-      addLog("AKASHA", `Neural Bridge Established: ${file.name}`, "success");
+      // 将附件添加到附件列表（单次对话使用）
+      const attachmentId = Date.now().toString() + Math.random();
+      setAttachments(prev => [...prev, { id: attachmentId, name: file.name, content: text }]);
+      
+      addLog("ATTACHMENT", `Attachment added: ${file.name}`, "success");
       setIndexingProgress(100);
       setTimeout(() => {
         setStatus(AgentStatus.IDLE);
         setIndexingProgress(0);
         setIndexingStats({ current: 0, total: 0 });
-      }, 1500);
+        setCurrentFileName('');
+      }, 800);
     } catch (e: any) {
-      addLog("SYSTEM", `Bridge Failed: ${e.message}`, "error");
+      addLog("SYSTEM", `Attachment processing failed: ${e.message}`, "error");
       setStatus(AgentStatus.IDLE);
       setIndexingProgress(0);
     }
@@ -301,6 +317,7 @@ const App: React.FC = () => {
             onVoiceToggle={handleVoiceToggle} 
             status={status}
             enableDeepThinking={enableDeepThinking}
+            attachmentCount={attachments.length}
             onToggleDeepThinking={() => {
               setEnableDeepThinking(!enableDeepThinking);
               setCognitiveConfig(prev => ({ ...prev, enableDebate: !enableDeepThinking }));
