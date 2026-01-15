@@ -77,10 +77,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
   }, [isRecording]);
 
   return (
-    <div className="fixed bottom-4 sm:bottom-10 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl px-0 sm:px-6 z-20">
-      <div className={`relative group transition-all duration-500 ${isBusy && !isIndexing ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}`}>
+    <div className="fixed bottom-4 sm:bottom-10 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] sm:w-full max-w-2xl mx-auto z-20 flex justify-center">
+      <div className={`relative group transition-all duration-500 mx-auto ${isBusy && !isIndexing ? 'opacity-50 scale-95' : 'opacity-100 scale-100'}`}>
         <div className={`absolute -inset-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full opacity-30 group-hover:opacity-70 blur transition duration-500 ${(isIndexing || isRecording) ? 'animate-pulse opacity-100' : ''}`}></div>
-        <div className="relative flex items-center bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-2 sm:px-4 py-2.5 sm:py-3 sm:py-4 shadow-2xl">
+        <div className="relative flex items-center bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-2 sm:px-4 py-2.5 sm:py-3 sm:py-4 shadow-2xl w-full">
           
           <button 
             disabled={isBusy || isRecording}
