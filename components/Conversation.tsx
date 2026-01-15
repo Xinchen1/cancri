@@ -18,8 +18,8 @@ export const Conversation: React.FC<ConversationProps> = ({ messages }) => {
   if (messages.length === 0) return null;
 
   return (
-    <div className="fixed top-20 sm:top-24 left-0 right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto bottom-32 sm:bottom-40 md:bottom-32 w-full sm:max-w-xl z-10 overflow-hidden pointer-events-none">
-      <div className="absolute inset-0 pointer-events-auto overflow-y-auto no-scrollbar px-6 sm:px-4 space-y-6 [mask-image:linear-gradient(to_bottom,transparent,black_5%,black_90%,transparent)]">
+    <div className="fixed top-20 sm:top-24 left-1/2 -translate-x-1/2 bottom-32 sm:bottom-40 md:bottom-32 w-[calc(100%-1rem)] sm:w-[calc(100%-3rem)] md:w-full max-w-2xl z-10 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 pointer-events-auto overflow-y-auto no-scrollbar px-4 sm:px-6 space-y-6 [mask-image:linear-gradient(to_bottom,transparent,black_5%,black_90%,transparent)]">
         <div className="h-6 sm:h-4" /> 
         {messages.map((msg) => (
           <div 
