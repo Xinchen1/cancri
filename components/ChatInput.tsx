@@ -136,7 +136,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
           ) : (
             <>
               <div className={`mr-1.5 sm:mr-2 md:mr-3 shrink-0 transition-all duration-300 ${isBusy ? 'opacity-100' : 'opacity-50'}`}>
-                <DiamondIcon status={status} size={16} className="sm:w-5 sm:h-5" />
+                <DiamondIcon status={status} size={14} className="sm:w-4 sm:h-4" />
               </div>
               <input
                 ref={inputRef}
