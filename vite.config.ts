@@ -30,43 +30,9 @@ export default defineConfig(({ mode }) => {
         }),
       ],
       build: {
-        minify: mode === 'production' ? 'terser' : false, // 开发环境不压缩
-        terserOptions: mode === 'production' ? {
-          compress: {
-            drop_console: false, // 保留 console 用于调试
-            drop_debugger: false, // 保留 debugger
-            pure_funcs: [], // 不删除任何函数
-            passes: 1, // 只压缩一次，避免过度优化
-            unsafe: false, // 禁用所有不安全优化
-            unsafe_comps: false,
-            unsafe_math: false,
-            unsafe_methods: false,
-            unsafe_proto: false,
-            unsafe_regexp: false,
-            unsafe_undefined: false,
-            collapse_vars: false, // 不折叠变量，避免 Three.js 问题
-            reduce_vars: false, // 不减少变量
-          },
-          mangle: {
-            properties: {
-              regex: /^_/ // 只混淆以下划线开头的属性
-            },
-            toplevel: false, // 不混淆顶层变量
-            reserved: [
-              'd', 'delta', 'data', 'safeDelta', 
-              'choices', 'content', 'json', 
-              'state', 'clock', 'gl', 'scene', 'camera',
-              'getElapsedTime', 'lerp', 'getContext',
-              'useFrame', 'Canvas', 'mesh', 'material'
-            ], // 保留所有可能被访问的属性名和方法名
-            keep_classnames: true, // 保留类名
-            keep_fnames: true, // 保留函数名
-          },
-          format: {
-            comments: true, // 保留注释
-            beautify: false, // 不美化代码
-          },
-        } : {},
+        // 完全禁用压缩，避免 Three.js 相关问题
+        minify: false,
+        terserOptions: {},
         rollupOptions: {
           output: {
             manualChunks: {

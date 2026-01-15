@@ -196,10 +196,23 @@ const App: React.FC = () => {
   console.log('[App] Messages count:', messages.length);
   console.log('[App] Logs count:', logs.length);
   
+  // 如果 Scene 组件有问题，先渲染一个简单的占位符
+  let sceneComponent;
+  try {
+    sceneComponent = <Scene status={status} />;
+  } catch (sceneError) {
+    console.error('[App] Scene component error:', sceneError);
+    sceneComponent = (
+      <div className="absolute inset-0 z-0 bg-black flex items-center justify-center">
+        <p className="text-white/40 text-sm">3D 场景加载失败</p>
+      </div>
+    );
+  }
+  
   try {
     return (
     <div className="relative w-screen h-screen overflow-hidden bg-black text-white selection:bg-purple-500/30">
-      <Scene status={status} />
+      {sceneComponent}
       {status !== AgentStatus.VOICE_ACTIVE && <AudioPlayer isPlaying={audioEnabled} preset={audioPreset} />}
 
       <div className="relative z-10 w-full h-full pointer-events-none">
