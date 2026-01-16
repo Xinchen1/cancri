@@ -99,10 +99,7 @@ const App: React.FC = () => {
         mistralKey: savedMistral || ''
       }));
       
-      // Update vector database service with loaded key
-      if (savedMistral) {
-        vectorDbService.updateMistralApiKey(savedMistral);
-      }
+      // VectorDbService now uses default API keys automatically
       console.log('[App] Services initialized successfully');
     } catch (error) {
       console.error('[App] Failed to initialize services:', error);

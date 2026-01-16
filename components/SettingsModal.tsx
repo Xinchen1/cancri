@@ -95,14 +95,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     onPresetChange(selectedAudio);
     onConfigChange(localConfig);
     
-    // Persist keys to local storage and update vector service
+    // Persist keys to local storage
+    // Note: vectorDbService now uses default API keys automatically, no need to update
     if (localConfig.mistralKey) {
       localStorage.setItem('cancri_mistral_vault', localConfig.mistralKey);
-      // Update vector database service with new key
-      vectorDbService.updateMistralApiKey(localConfig.mistralKey);
     } else {
       localStorage.removeItem('cancri_mistral_vault');
-      vectorDbService.updateMistralApiKey(null);
     }
 
     setStatus('saved');
