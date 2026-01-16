@@ -222,22 +222,38 @@ const App: React.FC = () => {
     setIndexingProgress(0);
     setIndexingStats({ current: 0, total: 0 });
     setCurrentFileName(file.name);
-    addLog("ATTACHMENT", `Processing attachment: ${file.name}`, "info");
+    
+    // 判断文件类型并显示相应的日志
+    const fileName = file.name.toLowerCase();
+    const isImage = file.type.startsWith('image/') || /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(fileName);
+    const isWord = /\.(docx|doc)$/i.test(fileName);
+    
+    if (isImage) {
+      addLog("ATTACHMENT", `Processing image: ${file.name} (OCR识别中...)`, "info");
+    } else if (isWord) {
+      addLog("ATTACHMENT", `Processing Word document: ${file.name} (解析中...)`, "info");
+    } else {
+      addLog("ATTACHMENT", `Processing attachment: ${file.name}`, "info");
+    }
     
     try {
-      setIndexingProgress(10);
-      const text = await file.text();
-      setIndexingProgress(50);
-      
-      // 模拟处理进度
-      await new Promise(resolve => setTimeout(resolve, 500));
-      setIndexingProgress(80);
+      // 使用文件处理服务处理文件
+      const { fileProcessorService } = await import('./services/fileProcessorService');
+      const processed = await fileProcessorService.processFile(file, (progress) => {
+        setIndexingProgress(progress);
+      });
       
       // 将附件添加到附件列表（单次对话使用）
       const attachmentId = Date.now().toString() + Math.random();
-      setAttachments(prev => [...prev, { id: attachmentId, name: file.name, content: text }]);
+      setAttachments(prev => [...prev, { id: attachmentId, name: processed.name, content: processed.content }]);
       
-      addLog("ATTACHMENT", `Attachment added: ${file.name}`, "success");
+      const successMsg = isImage 
+        ? `Image processed: ${processed.name} (OCR completed)`
+        : isWord
+        ? `Word document processed: ${processed.name}`
+        : `Attachment added: ${processed.name}`;
+      
+      addLog("ATTACHMENT", successMsg, "success");
       setIndexingProgress(100);
       setTimeout(() => {
         setStatus(AgentStatus.IDLE);
@@ -246,7 +262,13 @@ const App: React.FC = () => {
         setCurrentFileName('');
       }, 800);
     } catch (e: any) {
-      addLog("SYSTEM", `Attachment processing failed: ${e.message}`, "error");
+      const errorMsg = isImage
+        ? `Image OCR failed: ${e.message}`
+        : isWord
+        ? `Word document parsing failed: ${e.message}`
+        : `Attachment processing failed: ${e.message}`;
+      
+      addLog("SYSTEM", errorMsg, "error");
       setStatus(AgentStatus.IDLE);
       setIndexingProgress(0);
     }

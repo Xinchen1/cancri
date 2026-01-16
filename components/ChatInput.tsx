@@ -128,7 +128,13 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
             )}
           </button>
           
-          <input type="file" ref={fileInputRef} onChange={(e) => e.target.files?.[0] && onFileUpload(e.target.files[0])} className="hidden" accept=".txt,.md,.json" />
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={(e) => e.target.files?.[0] && onFileUpload(e.target.files[0])} 
+            className="hidden" 
+            accept=".txt,.md,.json,.doc,.docx,image/*,.jpg,.jpeg,.png,.gif,.webp,.bmp" 
+          />
 
           {/* 深度思考开关按钮 - 移动端和桌面端都显示 */}
           <button
