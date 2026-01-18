@@ -59,3 +59,4 @@ vercel --prod
 3. **检查资源路径**：确认路径是 `/assets/...` 而不是 `/cancri/assets/...`
 4. **清除浏览器缓存**：Ctrl+Shift+R 强制刷新
 
+

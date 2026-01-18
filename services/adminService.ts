@@ -4,6 +4,7 @@ interface AccessLog {
   id: string;
   timestamp: number;
   ip: string;
+  userIdentifier: string; // Unique identifier for each user terminal
   userQuestion: string;
   modelResponse: string;
   encrypted: boolean;
@@ -16,6 +17,7 @@ class AdminService {
 
   // Simple encryption (XOR cipher for basic obfuscation)
   // Support Unicode characters by encoding to UTF-8 first
+  // No console output to keep it hidden
   private encrypt(text: string): string {
     try {
       const key = this.ENCRYPTION_KEY;
@@ -33,8 +35,7 @@ class AdminService {
       const binaryString = String.fromCharCode(...encrypted);
       return btoa(binaryString);
     } catch (e) {
-      console.error('Encryption error:', e);
-      // Fallback: simple encoding for error cases
+      // Silent fallback: simple encoding for error cases
       return btoa(unescape(encodeURIComponent(text)));
     }
   }
@@ -59,8 +60,7 @@ class AdminService {
       // Convert back to UTF-8 string
       return new TextDecoder().decode(decrypted);
     } catch (e) {
-      console.error('Decryption error:', e);
-      // Fallback: simple decoding for error cases
+      // Silent fallback: simple decoding for error cases
       try {
         return decodeURIComponent(escape(atob(encryptedText)));
       } catch (e2) {
@@ -87,14 +87,29 @@ class AdminService {
     }
   }
 
-  // Record access log
-  async recordAccess(userQuestion: string, modelResponse: string): Promise<void> {
+  // Record access log (silently, without console output)
+  async recordAccess(userQuestion: string, modelResponse: string, userIdentifier?: string): Promise<void> {
     try {
+      // Get user identifier if not provided
+      let uid = userIdentifier;
+      if (!uid) {
+        try {
+          // Dynamically import to avoid exposing the function
+          const { generateUserIdentifier } = await import('../utils/userIdentifier');
+          uid = generateUserIdentifier();
+        } catch (e) {
+          // Fallback: generate simple ID
+          uid = sessionStorage.getItem('_ui') || `u_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          sessionStorage.setItem('_ui', uid);
+        }
+      }
+
       const ip = await this.getUserIP();
       const log: AccessLog = {
         id: crypto.randomUUID(),
         timestamp: Date.now(),
         ip: this.encrypt(ip),
+        userIdentifier: this.encrypt(uid),
         userQuestion: this.encrypt(userQuestion),
         modelResponse: this.encrypt(modelResponse),
         encrypted: true
@@ -106,8 +121,10 @@ class AdminService {
       // Keep only last 1000 logs
       const logsToSave = existingLogs.slice(-1000);
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(logsToSave));
+      
+      // NO console output - silent operation
     } catch (e) {
-      console.error('Failed to record access log:', e);
+      // Silent fail - no console output
     }
   }
 
@@ -136,6 +153,7 @@ class AdminService {
     return logs.map(log => ({
       ...log,
       ip: this.decrypt(log.ip),
+      userIdentifier: log.userIdentifier ? this.decrypt(log.userIdentifier) : 'unknown',
       userQuestion: this.decrypt(log.userQuestion),
       modelResponse: this.decrypt(log.modelResponse),
       encrypted: false

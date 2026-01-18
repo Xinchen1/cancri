@@ -100,3 +100,4 @@ npx wrangler pages deploy dist --project-name=cancri
 - 如果通过 Dashboard 部署，环境变量会自动应用
 - 如果通过 CLI 部署遇到认证问题，建议使用 Dashboard
 
+

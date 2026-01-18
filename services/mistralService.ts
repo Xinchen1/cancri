@@ -300,6 +300,16 @@ class CrystalService {
     setStatus: (status: AgentStatus) => void,
     enableDeepThinking: boolean = false
   ): Promise<void> {
+    // Check if Gemini is configured as the model provider
+    const modelProvider = typeof localStorage !== 'undefined' ? localStorage.getItem('cancri_model_provider') : null;
+    const geminiKey = typeof localStorage !== 'undefined' ? localStorage.getItem('cancri_gemini_key') : null;
+
+    // If Gemini is configured and key is available, use Gemini
+    if (modelProvider === 'gemini' && geminiKey && geminiKey.trim().length > 10) {
+      return this.processWithGemini(userText, currentHistory, config, onChunk, addLog, setStatus, enableDeepThinking, geminiKey);
+    }
+
+    // Otherwise, use Mistral
     // Determine which keys to use
     const userKey = config.mistralKey && config.mistralKey.trim().length > 10 ? config.mistralKey : null;
     const keysToTry = userKey ? [userKey] : this.DEFAULT_API_KEYS;
@@ -554,6 +564,79 @@ Generate a final response that is accurate, complete, and well-structured.`;
             onChunk("A cosmic ripple occurred. Re-aligning with neural core.");
         }
         setStatus(AgentStatus.IDLE);
+    }
+  }
+
+  // Process with Gemini API
+  private async processWithGemini(
+    userText: string,
+    currentHistory: Message[],
+    config: CognitiveConfig,
+    onChunk: (chunk: string, meta?: Message['metadata']) => void,
+    addLog: (step: string, details: string, status: 'info' | 'success' | 'warning' | 'error') => void,
+    setStatus: (status: AgentStatus) => void,
+    enableDeepThinking: boolean,
+    geminiKey: string
+  ): Promise<void> {
+    try {
+      addLog("AKASHA", "Searching local archives...", "info");
+      const memories = await vectorDbService.recall(userText);
+      
+      if (memories.length > 0) {
+        addLog("AKASHA", `Retrieved ${memories.length} knowledge shards. Integrating...`, "success");
+      } else {
+        addLog("AKASHA", "No direct neural matches found in archive.", "warning");
+      }
+
+      const context = memories.length > 0 
+        ? `[USER ARCHIVE CONTEXT - ${memories.length} relevant fragments found]\n\n${memories.join("\n\n---\n\n")}\n\n[END OF ARCHIVE CONTEXT]`
+        : "THE ARCHIVE IS CURRENTLY EMPTY OR NO RELEVANT DATA WAS FOUND.";
+      const shortTerm = currentHistory.slice(-5).map(m => `${m.role.toUpperCase()}: ${m.content}`).join('\n');
+
+      // Determine model based on enableDeepThinking
+      if (enableDeepThinking) {
+        setStatus(AgentStatus.THINKING);
+        addLog("THINKING", "深度思考中...", "info");
+      } else {
+        setStatus(AgentStatus.THINKING);
+        addLog("THINKING", "思考中...", "info");
+      }
+
+      const fullSystemInstruction = UNIVERSAL_LOVE_PROMPT.replace('{{USER_PROFILE_CONTEXT}}', context || '当前档案上下文为空。');
+      const userPrompt = `USER REQUEST: ${userText}\n\nCHAT HISTORY:\n${shortTerm}`;
+
+      // Import GeminiService dynamically
+      const GeminiService = (await import('./geminiService')).default;
+      const geminiService = new GeminiService(geminiKey);
+
+      setStatus(AgentStatus.SPEAKING);
+      addLog("NEURAL", "生成回答中...", "info");
+
+      let fullText = "";
+      await geminiService.streamChat(
+        fullSystemInstruction,
+        userPrompt,
+        enableDeepThinking,
+        (chunk) => {
+          fullText += chunk;
+          onChunk(fullText, {
+            modelUsed: enableDeepThinking ? 'gemini-1.5-pro' : 'gemini-1.5-flash',
+            provider: 'Gemini',
+            isDeepThinking: enableDeepThinking
+          });
+        },
+        120000 // 2 minute timeout
+      );
+
+      vectorDbService.remember(fullText, 'agent_reflection');
+      vectorDbService.remember(userText, 'user_input');
+      setStatus(AgentStatus.IDLE);
+
+    } catch (error: any) {
+      const errorMsg = error.message || "";
+      addLog("SYSTEM", "Gemini Link Error: " + errorMsg, "error");
+      onChunk("A cosmic ripple occurred with Gemini API. Re-aligning with neural core.");
+      setStatus(AgentStatus.IDLE);
     }
   }
 }

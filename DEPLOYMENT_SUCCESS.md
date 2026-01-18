@@ -87,3 +87,4 @@ npx wrangler pages deploy dist --project-name=cancri
 npx wrangler pages deployment list --project-name=cancri
 ```
 
+

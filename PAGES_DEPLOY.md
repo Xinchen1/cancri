@@ -154,3 +154,4 @@ npx wrangler pages deploy dist --project-name=cancri
 2. 查看浏览器控制台的错误信息
 3. 确认 Worker 和 Pages 都已正确配置
 
+

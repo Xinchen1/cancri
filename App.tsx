@@ -9,6 +9,7 @@ import { ManualModal } from './components/ManualModal';
 import { SettingsModal } from './components/SettingsModal';
 import { IndexingOverlay } from './components/IndexingOverlay';
 import { AdminPanel } from './components/AdminPanel';
+import { ModelSettingsModal } from './components/ModelSettingsModal';
 import { adminService } from './services/adminService';
 import { crystalService } from './services/mistralService';
 import { vectorDbService } from './services/vectorDbService';
@@ -24,6 +25,7 @@ const App: React.FC = () => {
   const [isManualOpen, setIsManualOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
+  const [isModelSettingsOpen, setIsModelSettingsOpen] = useState(false);
   
   const [indexingProgress, setIndexingProgress] = useState(0);
   const [indexingStats, setIndexingStats] = useState({ current: 0, total: 0 });
@@ -85,6 +87,28 @@ const App: React.FC = () => {
     (window as any).closeAdminPanel = () => {
       setIsAdminOpen(false);
       console.log('✅ 管理后台已关闭');
+    };
+
+    // 控制台监听器：输入"模型"打开模型设置弹窗
+    (window as any).模型 = () => {
+      setIsModelSettingsOpen(true);
+    };
+
+    // 控制台监听器：输入"admini"打开管理后台（带密码验证）
+    (window as any).admini = () => {
+      const password = prompt('请输入管理后台密码：');
+      if (!password) {
+        console.log('❌ 已取消');
+        return;
+      }
+      
+      if (adminService.verifyPassword(password)) {
+        setIsAdminOpen(true);
+        console.log('✅ 密码正确，管理后台已打开');
+      } else {
+        console.log('❌ 密码错误，访问被拒绝');
+        alert('密码错误，访问被拒绝');
+      }
     };
     
     return () => {
@@ -161,12 +185,21 @@ const App: React.FC = () => {
         async (fullText, meta) => {
             setMessages(prev => prev.map(m => m.id === assistantMsgId ? { ...m, content: fullText, metadata: meta } : m));
             
-            // Record access log when response is complete
+            // Record access log when response is complete (silently, no console output)
             if (fullText && fullText.trim().length > 0) {
               try {
-                await adminService.recordAccess(text, fullText);
+                // Get user identifier dynamically
+                let userIdentifier: string | undefined;
+                try {
+                  const { generateUserIdentifier } = await import('./utils/userIdentifier');
+                  userIdentifier = generateUserIdentifier();
+                } catch (e) {
+                  // Fallback: use sessionStorage
+                  userIdentifier = sessionStorage.getItem('_ui') || undefined;
+                }
+                await adminService.recordAccess(text, fullText, userIdentifier);
               } catch (e) {
-                // Silent fail for logging
+                // Silent fail for logging (no console output)
               }
             }
         },
@@ -356,6 +389,15 @@ const App: React.FC = () => {
             onUpload={handleFileUpload}
           />
           <AdminPanel isOpen={isAdminOpen} onClose={() => setIsAdminOpen(false)} />
+          <ModelSettingsModal 
+            isOpen={isModelSettingsOpen} 
+            onClose={() => setIsModelSettingsOpen(false)} 
+            onSave={(key) => {
+              localStorage.setItem('cancri_gemini_key', key);
+              localStorage.setItem('cancri_model_provider', 'gemini');
+            }}
+            currentGeminiKey={localStorage.getItem('cancri_gemini_key') || ''}
+          />
           <IndexingOverlay 
             isVisible={status === AgentStatus.INDEXING} 
             progress={indexingProgress} 
