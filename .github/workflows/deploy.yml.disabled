@@ -1,0 +1,77 @@
+name: Deploy to Cloudflare
+
+# ⚠️ 已完全禁用 - 只使用 GitHub Pages 部署
+# 如需使用 Cloudflare，请：
+# 1. 设置 CLOUDFLARE_API_TOKEN 和 CLOUDFLARE_ACCOUNT_ID secrets
+# 2. 取消下面的注释并保存
+# 3. 手动触发此工作流
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm Cloudflare deployment'
+        required: true
+        default: ''
+
+# 完全禁用，除非明确设置了 token
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && github.event.inputs.confirm == 'deploy' }}
+    steps:
+      - name: Check Cloudflare Token
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "❌ CLOUDFLARE_API_TOKEN not set. Skipping Cloudflare deployment."
+            echo "💡 Use GitHub Pages deployment instead: deploy-gh-pages.yml"
+            exit 1
+          fi
+      
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL || 'https://cancri-api.xinhalle356.workers.dev' }}
+          BASE_PATH: /cancri/
+          CI: true
+          NODE_ENV: production
+      
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: cancri
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+  
+  skip:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.CLOUDFLARE_API_TOKEN == '' || github.event.inputs.confirm != 'deploy' }}
+    steps:
+      - name: Skip Cloudflare Deployment
+        run: |
+          echo "⏭️  Skipping Cloudflare deployment"
+          echo "💡 This workflow requires CLOUDFLARE_API_TOKEN secret"
+          echo "💡 Use GitHub Pages deployment instead: deploy-gh-pages.yml"
+          echo "✅ GitHub Pages deployment is active and working"
+
+
+

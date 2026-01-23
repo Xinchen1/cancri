@@ -1,0 +1,15 @@
+name = "cancri-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+[env.production.secrets]
+# Set these via: wrangler secret put MISTRAL_API_KEYS
+# MISTRAL_API_KEYS = "encrypted_keys_json"
+# ENCRYPTION_KEY = "your_encryption_key"
+# ADMIN_PASSWORD_HASH = "hashed_password"
+
+
+

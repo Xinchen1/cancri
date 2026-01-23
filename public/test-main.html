@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Main App</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #050505;
+      color: white;
+      font-family: monospace;
+    }
+    .test {
+      margin: 20px 0;
+      padding: 15px;
+      background: #1a1a1a;
+      border-radius: 5px;
+      border-left: 3px solid #a855f7;
+    }
+    .success { color: #22d3ee; }
+    .error { color: #f43f5e; }
+    button {
+      padding: 10px 20px;
+      background: #7e22ce;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+    iframe {
+      width: 100%;
+      height: 600px;
+      border: 1px solid #333;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 主应用测试页面</h1>
+  
+  <div class="test">
+    <h2>1. 检查主应用资源</h2>
+    <div id="resource-check"></div>
+  </div>
+  
+  <div class="test">
+    <h2>2. 测试加载主应用</h2>
+    <button onclick="testMainApp()">测试主应用</button>
+    <button onclick="loadInIframe()">在 iframe 中加载</button>
+    <div id="test-result"></div>
+  </div>
+  
+  <div class="test">
+    <h2>3. 主应用预览</h2>
+    <iframe id="main-app-frame" src="/cancri/index.html"></iframe>
+  </div>
+  
+  <script>
+    async function testMainApp() {
+      const resultEl = document.getElementById('test-result');
+      resultEl.innerHTML = '<p>⏳ 正在检查...</p>';
+      
+      try {
+        // 检查主页面
+        const mainPageUrl = '/cancri/index.html';
+        const res = await fetch(mainPageUrl);
+        
+        if (!res.ok) {
+          resultEl.innerHTML = `<p class="error">❌ 主页面返回状态码: ${res.status}</p>`;
+          return;
+        }
+        
+        const html = await res.text();
+        resultEl.innerHTML = '<p class="success">✅ 主页面可访问</p>';
+        
+        // 检查是否有 root 元素
+        if (html.includes('id="root"')) {
+          resultEl.innerHTML += '<p class="success">✅ 找到 root 元素</p>';
+        } else {
+          resultEl.innerHTML += '<p class="error">❌ 未找到 root 元素</p>';
+        }
+        
+        // 检查脚本
+        const scriptMatches = html.match(/src="([^"]+\.js)"/g);
+        if (scriptMatches) {
+          resultEl.innerHTML += `<p>找到 ${scriptMatches.length} 个脚本引用</p>`;
+          
+          // 测试每个脚本
+          for (const match of scriptMatches) {
+            const src = match.match(/src="([^"]+)"/)[1];
+            const fullUrl = src.startsWith('http') ? src : window.location.origin + src;
+            try {
+              const scriptRes = await fetch(fullUrl, { method: 'HEAD' });
+              if (scriptRes.ok) {
+                resultEl.innerHTML += `<p class="success">✅ ${src}</p>`;
+              } else {
+                resultEl.innerHTML += `<p class="error">❌ ${src} - ${scriptRes.status}</p>`;
+              }
+            } catch (e) {
+              resultEl.innerHTML += `<p class="error">❌ ${src} - ${e.message}</p>`;
+            }
+          }
+        } else {
+          resultEl.innerHTML += '<p class="error">❌ 未找到脚本引用</p>';
+        }
+        
+        // 检查样式
+        const styleMatches = html.match(/href="([^"]+\.css)"/g);
+        if (styleMatches) {
+          resultEl.innerHTML += `<p>找到 ${styleMatches.length} 个样式表引用</p>`;
+          for (const match of styleMatches) {
+            const href = match.match(/href="([^"]+)"/)[1];
+            const fullUrl = href.startsWith('http') ? href : window.location.origin + href;
+            try {
+              const styleRes = await fetch(fullUrl, { method: 'HEAD' });
+              if (styleRes.ok) {
+                resultEl.innerHTML += `<p class="success">✅ ${href}</p>`;
+              } else {
+                resultEl.innerHTML += `<p class="error">❌ ${href} - ${styleRes.status}</p>`;
+              }
+            } catch (e) {
+              resultEl.innerHTML += `<p class="error">❌ ${href} - ${e.message}</p>`;
+            }
+          }
+        }
+        
+      } catch (e) {
+        resultEl.innerHTML = `<p class="error">❌ 检查失败: ${e.message}</p>`;
+      }
+    }
+    
+    function loadInIframe() {
+      const iframe = document.getElementById('main-app-frame');
+      iframe.src = '/cancri/index.html';
+      iframe.onload = () => {
+        console.log('Main app loaded in iframe');
+      };
+      iframe.onerror = (e) => {
+        console.error('Failed to load main app:', e);
+      };
+    }
+    
+    // 自动检查资源
+    window.addEventListener('load', () => {
+      testMainApp();
+    });
+  </script>
+</body>
+</html>
+
+
+

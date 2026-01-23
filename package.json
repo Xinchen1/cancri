@@ -1,0 +1,41 @@
+{
+  "name": "cancri",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:obfuscated": "vite build && npm run obfuscate",
+    "preview": "vite preview",
+    "obfuscate": "tsx scripts/obfuscate-build.ts",
+    "worker:dev": "cd worker && wrangler dev",
+    "worker:deploy": "cd worker && wrangler deploy",
+    "encrypt:prompt": "tsx scripts/encrypt-prompt.ts"
+  },
+  "dependencies": {
+    "@google/genai": "^1.33.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.4.2",
+    "lucide-react": "^0.561.0",
+    "mammoth": "^1.11.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "tesseract.js": "^7.0.0",
+    "three": "^0.182.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.23",
+    "javascript-obfuscator": "^4.2.2",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
+    "terser": "^5.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "wrangler": "^3.0.0"
+  }
+}

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Deploy Test</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #050505;
+      color: white;
+      font-family: monospace;
+    }
+    .test-item {
+      margin: 10px 0;
+      padding: 10px;
+      background: #1a1a1a;
+      border-radius: 5px;
+    }
+    .success { color: #22d3ee; }
+    .error { color: #f43f5e; }
+  </style>
+</head>
+<body>
+  <h1>部署测试页面</h1>
+  
+  <div class="test-item">
+    <strong>当前 URL:</strong> <span id="current-url"></span>
+  </div>
+  
+  <div class="test-item">
+    <strong>Base Path:</strong> <span id="base-path"></span>
+  </div>
+  
+  <div class="test-item">
+    <strong>Root Element:</strong> <span id="root-check"></span>
+  </div>
+  
+  <div class="test-item">
+    <strong>Scripts:</strong> <span id="scripts-check"></span>
+  </div>
+  
+  <div class="test-item">
+    <strong>Stylesheets:</strong> <span id="styles-check"></span>
+  </div>
+  
+  <div class="test-item">
+    <strong>Errors:</strong> <span id="errors-check"></span>
+  </div>
+  
+  <script>
+    const errors = [];
+    
+    window.addEventListener('error', (e) => {
+      errors.push(e.message + ' at ' + e.filename + ':' + e.lineno);
+      updateErrors();
+    });
+    
+    window.addEventListener('unhandledrejection', (e) => {
+      errors.push('Promise rejection: ' + e.reason);
+      updateErrors();
+    });
+    
+    function updateErrors() {
+      const el = document.getElementById('errors-check');
+      if (errors.length === 0) {
+        el.textContent = '无错误';
+        el.className = 'success';
+      } else {
+        el.textContent = errors.length + ' 个错误';
+        el.className = 'error';
+        console.error('Errors:', errors);
+      }
+    }
+    
+    document.getElementById('current-url').textContent = window.location.href;
+    document.getElementById('base-path').textContent = window.location.pathname;
+    
+    const root = document.getElementById('root');
+    if (root) {
+      document.getElementById('root-check').textContent = '找到 (#root)';
+      document.getElementById('root-check').className = 'success';
+    } else {
+      document.getElementById('root-check').textContent = '未找到';
+      document.getElementById('root-check').className = 'error';
+    }
+    
+    const scripts = document.querySelectorAll('script[type="module"]');
+    document.getElementById('scripts-check').textContent = scripts.length + ' 个模块脚本';
+    scripts.forEach((s, i) => {
+      console.log(`Script ${i}:`, s.src || 'inline');
+    });
+    
+    const styles = document.querySelectorAll('link[rel="stylesheet"]');
+    document.getElementById('styles-check').textContent = styles.length + ' 个样式表';
+    styles.forEach((s, i) => {
+      console.log(`Stylesheet ${i}:`, s.href);
+    });
+    
+    updateErrors();
+  </script>
+</body>
+</html>
+
+
+

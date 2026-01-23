@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CANCRI Debug</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      background: #050505;
+      color: #fff;
+      font-family: monospace;
+    }
+    .test-item {
+      margin: 10px 0;
+      padding: 10px;
+      background: #1a1a1a;
+      border-radius: 5px;
+    }
+    .success { color: #4ade80; }
+    .error { color: #f43f5e; }
+    .info { color: #60a5fa; }
+  </style>
+</head>
+<body>
+  <h1>CANCRI Debug Page</h1>
+  <div id="results"></div>
+  
+  <script>
+    const results = document.getElementById('results');
+    
+    function addResult(name, status, message) {
+      const div = document.createElement('div');
+      div.className = 'test-item';
+      div.innerHTML = `<strong>${name}:</strong> <span class="${status}">${message}</span>`;
+      results.appendChild(div);
+    }
+    
+    // Test 1: Basic DOM
+    addResult('DOM', 'success', '✓ DOM loaded');
+    
+    // Test 2: Console
+    console.log('Debug: Console test');
+    addResult('Console', 'success', '✓ Console available');
+    
+    // Test 3: localStorage
+    try {
+      localStorage.setItem('test', 'value');
+      localStorage.removeItem('test');
+      addResult('localStorage', 'success', '✓ Available');
+    } catch (e) {
+      addResult('localStorage', 'error', '✗ ' + e.message);
+    }
+    
+    // Test 4: IndexedDB
+    try {
+      const request = indexedDB.open('test_db', 1);
+      request.onsuccess = () => {
+        indexedDB.deleteDatabase('test_db');
+        addResult('IndexedDB', 'success', '✓ Available');
+      };
+      request.onerror = () => {
+        addResult('IndexedDB', 'error', '✗ Not available');
+      };
+    } catch (e) {
+      addResult('IndexedDB', 'error', '✗ ' + e.message);
+    }
+    
+    // Test 5: Fetch API
+    fetch('/').then(() => {
+      addResult('Fetch API', 'success', '✓ Available');
+    }).catch(() => {
+      addResult('Fetch API', 'error', '✗ Failed');
+    });
+    
+    // Test 6: WebGL
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (gl) {
+        addResult('WebGL', 'success', '✓ Available');
+      } else {
+        addResult('WebGL', 'error', '✗ Not supported');
+      }
+    } catch (e) {
+      addResult('WebGL', 'error', '✗ ' + e.message);
+    }
+    
+    // Test 7: Check for errors in console
+    window.addEventListener('error', (e) => {
+      addResult('Runtime Error', 'error', e.message + ' at ' + e.filename + ':' + e.lineno);
+    });
+    
+    // Test 8: Check main app
+    setTimeout(() => {
+      const root = document.getElementById('root');
+      if (root && root.children.length > 0) {
+        addResult('React App', 'success', '✓ Rendered');
+      } else {
+        addResult('React App', 'error', '✗ Not rendered (check console)');
+      }
+    }, 2000);
+  </script>
+  
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>
+
+
+

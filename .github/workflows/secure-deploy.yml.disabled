@@ -1,0 +1,127 @@
+name: Secure Deploy to Cloudflare
+
+# ⚠️ 已完全禁用 - 只使用 GitHub Pages 部署
+# 如需使用 Cloudflare，请：
+# 1. 设置 CLOUDFLARE_API_TOKEN 和 CLOUDFLARE_ACCOUNT_ID secrets
+# 2. 取消下面的注释并保存
+# 3. 手动触发此工作流
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm Cloudflare deployment'
+        required: true
+        default: ''
+
+env:
+  NODE_VERSION: '18'
+
+# 完全禁用，除非明确设置了 token
+jobs:
+  check-token:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.CLOUDFLARE_API_TOKEN == '' || github.event.inputs.confirm != 'deploy' }}
+    steps:
+      - name: Skip Cloudflare Deployment
+        run: |
+          echo "⏭️  Skipping Cloudflare deployment"
+          echo "💡 This workflow requires CLOUDFLARE_API_TOKEN secret"
+          echo "💡 Use GitHub Pages deployment instead: deploy-gh-pages.yml"
+          echo "✅ GitHub Pages deployment is active and working"
+          exit 0
+
+  security-check:
+    if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && github.event.inputs.confirm == 'deploy' }}
+    name: Security Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Check for exposed secrets
+        run: |
+          if grep -r "mistral.*api.*key" --include="*.ts" --include="*.tsx" --include="*.js" --exclude-dir=node_modules . | grep -v "process.env\|import.meta.env\|localStorage"; then
+            echo "❌ Potential secret exposure detected!"
+            exit 1
+          fi
+      
+      - name: Validate encryption
+        run: |
+          if [ -f "worker/src/index.ts" ]; then
+            if grep -q "BASE64_ENCRYPTED_PROMPT_HERE" worker/src/index.ts && [ "${{ github.ref }}" == "refs/heads/main" ]; then
+              echo "⚠️ Warning: Using placeholder encrypted prompt in production"
+            fi
+          fi
+
+  build-frontend:
+    name: Build Frontend
+    needs: security-check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+      
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist
+
+  deploy-worker:
+    name: Deploy Cloudflare Worker
+    if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && github.event.inputs.confirm == 'deploy' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          command: deploy
+
+  deploy-pages:
+    name: Deploy Cloudflare Pages
+    if: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && github.event.inputs.confirm == 'deploy' }}
+    needs: [build-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist
+      
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: cancri
+          directory: dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+
+
+

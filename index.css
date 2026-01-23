@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #050505;
+    color: white;
+    overflow: hidden;
+    /* 防止移动端缩放 */
+    touch-action: pan-x pan-y;
+    -webkit-user-select: none;
+    user-select: none;
+    /* 防止双击缩放 */
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  #root {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    /* 防止移动端缩放 */
+    touch-action: pan-x pan-y;
+  }
+  
+  /* 允许输入框选择文本 */
+  input, textarea {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+}
+
+@layer utilities {
+  /* Custom scrollbar for logs */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
