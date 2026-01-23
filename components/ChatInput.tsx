@@ -1,6 +1,6 @@
 
 import React, { useState, KeyboardEvent, useRef, useEffect } from 'react';
-import { Send, Paperclip, Loader2, Mic, MicOff, Brain } from 'lucide-react';
+import { Send, Paperclip, Loader2, Mic, MicOff, Brain, Folder } from 'lucide-react';
 import { AgentStatus } from '../types';
 import { speechToTextService } from '../services/speechToTextService';
 import { DiamondIcon } from './DiamondIcon';
@@ -20,6 +20,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
   const [isRecording, setIsRecording] = useState(false);
   const [voiceText, setVoiceText] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const isBusy = status !== AgentStatus.IDLE && status !== AgentStatus.VOICE_ACTIVE;
   const isIndexing = status === AgentStatus.INDEXING;
@@ -47,6 +48,133 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleSend();
+  };
+
+  // 文件夹选择处理（优先使用 Tauri API，然后 File System Access API，最后 webkitdirectory）
+  const handleFolderSelect = async () => {
+    if (isBusy || isIndexing) return;
+    
+    try {
+      // 1. 优先使用 Tauri API（如果可用）- 支持 Tauri 1.x 和 2.x
+      const isTauri = typeof window !== 'undefined' && 
+        ((window as any).__TAURI__ || (window as any).__TAURI_INTERNALS__);
+      
+      if (isTauri) {
+        try {
+          // 动态导入 Tauri API（避免在非 Tauri 环境中报错）
+          const tauriDialog = await import('@tauri-apps/api/dialog').catch(() => null);
+          const tauriFs = await import('@tauri-apps/api/fs').catch(() => null);
+          const tauriPath = await import('@tauri-apps/api/path').catch(() => null);
+          
+          if (tauriDialog && tauriFs && tauriPath) {
+            const selectedPath = await tauriDialog.open({
+              directory: true,
+              multiple: false,
+              title: '选择文件夹'
+            });
+            
+            if (selectedPath && typeof selectedPath === 'string') {
+              // 递归读取文件夹中的所有文件
+              const readDirectory = async (dirPath: string): Promise<string[]> => {
+                const files: string[] = [];
+                try {
+                  const entries = await tauriFs.readDir(dirPath);
+                  for (const entry of entries) {
+                    if (entry.children) {
+                      // 是目录，递归读取
+                      const subFiles = await readDirectory(entry.path);
+                      files.push(...subFiles);
+                    } else {
+                      // 是文件，检查是否支持
+                      const fileName = entry.name?.toLowerCase() || '';
+                      const isSupported = 
+                        fileName.endsWith('.txt') || 
+                        fileName.endsWith('.md') || 
+                        fileName.endsWith('.json') ||
+                        fileName.endsWith('.doc') ||
+                        fileName.endsWith('.docx') ||
+                        /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(fileName);
+                      
+                      if (isSupported && entry.path) {
+                        files.push(entry.path);
+                      }
+                    }
+                  }
+                } catch (error) {
+                  console.error('读取目录失败:', error);
+                }
+                return files;
+              };
+              
+              const filePaths = await readDirectory(selectedPath);
+              
+              // 读取文件内容并转换为 File 对象
+              for (const filePath of filePaths) {
+                try {
+                  const fileData = await tauriFs.readBinaryFile(filePath);
+                  const fileName = await tauriPath.basename(filePath);
+                  const file = new File([fileData], fileName, { type: 'application/octet-stream' });
+                  
+                  // 延迟处理，避免同时处理太多文件
+                  await new Promise(resolve => setTimeout(resolve, 100));
+                  onFileUpload(file);
+                } catch (error) {
+                  console.error(`处理文件失败 ${filePath}:`, error);
+                }
+              }
+              return;
+            }
+          }
+        } catch (error) {
+          console.log('Tauri API 不可用，使用降级方案:', error);
+        }
+      }
+      
+      // 2. 尝试使用 File System Access API（现代浏览器）
+      if ('showDirectoryPicker' in window) {
+        const directoryHandle = await (window as any).showDirectoryPicker();
+        const files: File[] = [];
+        
+        const readDirectory = async (dirHandle: any) => {
+          for await (const entry of dirHandle.values()) {
+            if (entry.kind === 'file') {
+              const file = await entry.getFile();
+              const fileName = file.name.toLowerCase();
+              const isSupported = 
+                fileName.endsWith('.txt') || 
+                fileName.endsWith('.md') || 
+                fileName.endsWith('.json') ||
+                fileName.endsWith('.doc') ||
+                fileName.endsWith('.docx') ||
+                /\.(jpg|jpeg|png|gif|webp|bmp)$/i.test(fileName);
+              
+              if (isSupported) {
+                files.push(file);
+              }
+            } else if (entry.kind === 'directory') {
+              await readDirectory(entry);
+            }
+          }
+        };
+        
+        await readDirectory(directoryHandle);
+        
+        for (const file of files) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          onFileUpload(file);
+        }
+        return;
+      }
+      
+      // 3. 降级到 webkitdirectory（传统浏览器）
+      folderInputRef.current?.click();
+    } catch (error: any) {
+      if (error.name !== 'AbortError') {
+        console.error('文件夹选择失败:', error);
+        // 降级到 webkitdirectory
+        folderInputRef.current?.click();
+      }
+    }
   };
 
   const handleVoiceClick = () => {
@@ -114,26 +242,60 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onFileUpload, onVo
         <div className={`absolute -inset-0.5 bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 rounded-full opacity-30 group-hover:opacity-70 blur transition duration-500 ${(isIndexing || isRecording) ? 'animate-pulse opacity-100' : ''}`}></div>
         <div className="relative flex items-center bg-black/60 backdrop-blur-xl border border-white/10 rounded-full px-2 sm:px-3 md:px-4 py-2.5 sm:py-2.5 md:py-3 shadow-2xl w-full">
           
-          <button 
-            disabled={isBusy || isRecording}
-            onClick={() => fileInputRef.current?.click()}
-            className={`relative mr-1 sm:mr-2 md:mr-3 p-1.5 sm:p-2 rounded-full transition-all hover:bg-white/10 shrink-0 ${isBusy || isRecording ? 'opacity-20' : 'text-white/50 hover:text-white'}`}
-            title="Upload file"
-          >
-            {isIndexing ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-cyan-400" /> : <Paperclip size={16} className="sm:w-5 sm:h-5" />}
-            {attachmentCount > 0 && !isIndexing && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-purple-500 text-white text-[10px] font-bold rounded-full border-2 border-black/60">
-                {attachmentCount}
-              </span>
-            )}
-          </button>
+          <div className="relative mr-1 sm:mr-2 md:mr-3 flex gap-1 shrink-0">
+            {/* 文件选择按钮 */}
+            <button 
+              disabled={isBusy || isRecording}
+              onClick={() => fileInputRef.current?.click()}
+              className={`relative p-1.5 sm:p-2 rounded-full transition-all hover:bg-white/10 ${isBusy || isRecording ? 'opacity-20' : 'text-white/50 hover:text-white'}`}
+              title="上传文件"
+            >
+              {isIndexing ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin text-cyan-400" /> : <Paperclip size={16} className="sm:w-5 sm:h-5" />}
+              {attachmentCount > 0 && !isIndexing && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-purple-500 text-white text-[10px] font-bold rounded-full border-2 border-black/60">
+                  {attachmentCount}
+                </span>
+              )}
+            </button>
+            
+            {/* 文件夹选择按钮 */}
+            <button 
+              disabled={isBusy || isRecording}
+              onClick={handleFolderSelect}
+              className={`relative p-1.5 sm:p-2 rounded-full transition-all hover:bg-white/10 ${isBusy || isRecording ? 'opacity-20' : 'text-white/50 hover:text-white'}`}
+              title="选择文件夹"
+            >
+              <Folder size={16} className="sm:w-5 sm:h-5" />
+            </button>
+          </div>
           
           <input 
             type="file" 
             ref={fileInputRef} 
-            onChange={(e) => e.target.files?.[0] && onFileUpload(e.target.files[0])} 
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) onFileUpload(file);
+            }} 
             className="hidden" 
             accept=".txt,.md,.json,.doc,.docx,image/*,.jpg,.jpeg,.png,.gif,.webp,.bmp" 
+          />
+          
+          <input 
+            type="file" 
+            ref={folderInputRef}
+            onChange={(e) => {
+              const files = e.target.files;
+              if (files && files.length > 0) {
+                // 处理文件夹中的所有文件
+                Array.from(files).forEach((file) => {
+                  onFileUpload(file);
+                });
+              }
+            }}
+            className="hidden"
+            webkitdirectory=""
+            directory=""
+            multiple
           />
 
           {/* 深度思考开关按钮 - 移动端和桌面端都显示 */}
